@@ -58,13 +58,11 @@ bool Loader::LoadOnlyNames(std::vector<std::string>& winNames, std::vector<Regex
 
                 RClasses.push_back(RClass);
                 RNames.push_back(RName);
-                // ноый
                 vector<int> vec{fileLine};
                 lineNum.push_back(vec);
             }
             else
             {
-
                 lineNum.at(index).push_back(fileLine);
             }
         }
@@ -119,7 +117,6 @@ bool Loader::LoadFull(std::vector<int>& ruleLineNum, bool& isFloating, int& opac
                         sizeY = matches[4];
                 }
             }
-
             vecIndex++;
         }
         lineNum++;

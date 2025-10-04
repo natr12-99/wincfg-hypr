@@ -53,7 +53,6 @@ MainWindow::MainWindow()
     windowSelectL.set_markup("<b>New rule</b>");
     windowListTopBox.append(windowSelectL);
     windowListTopBox.append(refreshListButton);
-    // refreshListButton.set_hexpand(true);
     windowListTopBox.append(goToRuleList);
 
     windowSelectBox.append(windowListTopBox);
@@ -90,7 +89,6 @@ MainWindow::MainWindow()
     ruleSelectL.set_markup("<b>Select rule</b>");
     rulesListTopBox.append(ruleSelectL);
     rulesListTopBox.append(refreshRulesListButton);
-    // refreshRulesListButton.set_hexpand(true);
     rulesListTopBox.append(goToWindowsList);
 
     ruleSelectBox.append(rulesListTopBox);
@@ -114,7 +112,6 @@ MainWindow::MainWindow()
         configPath = settings->get_string("config-path");
         RefreshRulesList();
     }
-    // configPath = "windowrules.conf";
 }
 
 void MainWindow::RefreshWindowsList()
@@ -348,7 +345,6 @@ void MainWindow::InitRuleEditor()
     activeOpacity.set_increments(1, 10);
     activeOpacity.set_value(100);
     activeOpBox.append(activeOpacity);
-    // editRuleBox.append(activeOpBox);
     opacityBox.append(activeOpBox);
 
     // прозрачность
@@ -428,11 +424,8 @@ void MainWindow::InitRuleEditor()
     });
     exitB->set_margin(5);
     exitB->set_hexpand(false);
-    //     exitB->set_valign (Align::END);
 
     Button* saveB = make_managed<Button>("Save");
-    // saveB->signal_clicked().connect(sigc::bind(sigc::mem_fun(config, &RuleConfig::Save)));
-    // saveB->signal_clicked().connect(sigc::bind(sigc::mem_fun(config, &RuleConfig::Save), configPath));
     saveB->signal_clicked().connect([this]() {
         if (!config.Save(configPath))
             FileErrorAlert();
@@ -557,7 +550,6 @@ void MainWindow::SelectConfigPath()
     fileDialog->set_title("Select window rules file");
     fileDialog->open(*this, [fileDialog, this](Glib::RefPtr<Gio::AsyncResult>& result) {
         auto file = fileDialog->open_finish(result);
-        // std::cout << file->get_path();
         configPath = file->get_path();
         settings->set_string("config-path", configPath);
     });
