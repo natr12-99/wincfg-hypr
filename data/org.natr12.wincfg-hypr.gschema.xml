@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.natr12.wincfg-hypr" path="/org/natr12/wincfg-hypr/">
+    <key name="first-launch" type="b">
+      <default>true</default>
+    </key>
+    <key name="config-path" type="s">
+      <default>""</default>
+    </key>
+  </schema>
+</schemalist>
