@@ -15,14 +15,14 @@ bool Saver::SaveStruct(Rule* rule, std::string path)
         if (!DeleteStrings(rule->lineNum, content, path))
             return false;
 
-        std::string floatStr, opacityStr, posStr, sizeStr;
-        GetStrings(rule, floatStr, opacityStr, posStr, sizeStr);
+        std::string winTypeStr, opacityStr, posStr, sizeStr;
+        GetStrings(rule, winTypeStr, opacityStr, posStr, sizeStr);
         int lineCount = rule->lineNum.back();
         rule->lineNum.clear();
 
-        if (floatStr.length() > 0)
+        if (winTypeStr.length() > 0)
         {
-            content.insert(content.begin() + lineCount, floatStr);
+            content.insert(content.begin() + lineCount, winTypeStr);
             rule->lineNum.push_back(lineCount);
             lineCount++;
         }
@@ -67,14 +67,14 @@ bool Saver::SaveStruct(Rule* rule, std::string path)
 
         std::ofstream file(path, std::ios::app);
 
-        std::string floatStr, opacityStr, posStr, sizeStr;
-        GetStrings(rule, floatStr, opacityStr, posStr, sizeStr);
+        std::string winTypeStr, opacityStr, posStr, sizeStr;
+        GetStrings(rule, winTypeStr, opacityStr, posStr, sizeStr);
 
         std::vector<int> tvec;
 
-        if (floatStr.length() > 0)
+        if (winTypeStr.length() > 0)
         {
-            file << floatStr << std::endl;
+            file << winTypeStr << std::endl;
             tvec.push_back(lineCount);
             lineCount++;
         }
@@ -141,7 +141,7 @@ bool Saver::DeleteStrings(std::vector<int>& ruleLineNum, std::vector<std::string
     return true;
 }
 
-void Saver::GetStrings(Rule* rule, std::string& floatStr, std::string& opacityStr, std::string& posStr,
+void Saver::GetStrings(Rule* rule, std::string& winTypeStr, std::string& opacityStr, std::string& posStr,
                        std::string& sizeStr)
 {
     std::string ruleCondition;
@@ -175,8 +175,21 @@ void Saver::GetStrings(Rule* rule, std::string& floatStr, std::string& opacitySt
         ruleCondition += "class:.*" + rule->windowClass + ".*";
     }
 
-    if (rule->floating)
-        floatStr = ruleStart + "float," + ruleCondition;
+    switch (rule->winType)
+    {
+    case WindowType::floating:
+        winTypeStr = ruleStart + "float," + ruleCondition;
+        break;
+    case WindowType::fullscreen:
+        winTypeStr = ruleStart + "fullscreen," + ruleCondition;
+        break;
+    case WindowType::tile:
+        winTypeStr = ruleStart + "tile," + ruleCondition;
+        break;
+    case WindowType::maximize:
+        winTypeStr = ruleStart + "maximize," + ruleCondition; // в этой строке не уверен посмотри пж
+        break;
+    };
 
     if (rule->opacityActive != -1)
     {

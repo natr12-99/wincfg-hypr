@@ -72,7 +72,7 @@ bool Loader::LoadOnlyNames(std::vector<std::string>& winNames, std::vector<Regex
     return true;
 }
 
-bool Loader::LoadFull(std::vector<int>& ruleLineNum, bool& isFloating, int& opacityActive, int& opacityInactive,
+bool Loader::LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& opacityActive, int& opacityInactive,
                       std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY, std::string path)
 {
     using namespace std;
@@ -97,7 +97,13 @@ bool Loader::LoadFull(std::vector<int>& ruleLineNum, bool& isFloating, int& opac
             if (regex_search(str, matches, pattern))
             {
                 if (matches[2].compare("float") == 0)
-                    isFloating = true;
+                    winType = WindowType::floating;
+                else if (matches[2].compare("tile") == 0)
+                    winType = WindowType::tile;
+                else if (matches[2].compare("maximize") == 0)
+                    winType = WindowType::maximize;
+                else if (matches[2].compare("fullscreen") == 0)
+                    winType = WindowType::fullscreen;
                 else if (matches[2].compare("opacity") == 0)
                 {
                     opacityActive = stof(matches[3]) * 100;

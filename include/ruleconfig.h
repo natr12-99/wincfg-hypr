@@ -1,5 +1,6 @@
 #pragma once
 #include "include/regextype.h"
+#include "include/windowtype.h"
 #include "string"
 #include <vector>
 class Rule;
@@ -12,7 +13,7 @@ class RuleConfig
     void ChangeWinRegEx(RegexType type);
     void ChangeClsRegEx(RegexType type);
     void ChangeOpacity(float active, float inactive);
-    void ChangeFloating(bool floating);
+    void ChangeWindowType(WindowType type);
     void ChangeSize(std::string x, std::string y);
     void RefreshRulesList();
     void ChangePos(std::string x, std::string y);

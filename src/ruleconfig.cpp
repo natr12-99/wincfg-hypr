@@ -47,9 +47,9 @@ void RuleConfig::ChangeOpacity(float active, float inactive)
     }
 }
 
-void RuleConfig::ChangeFloating(bool floating)
+void RuleConfig::ChangeWindowType(WindowType type)
 {
-    rule->floating = floating;
+    rule->winType = type;
 }
 
 void RuleConfig::ChangeSize(std::string x, std::string y)

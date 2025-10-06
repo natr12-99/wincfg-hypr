@@ -1,6 +1,7 @@
 #pragma once
 
 #include "regextype.h"
+#include "include/windowtype.h"
 #include "string"
 #include "vector"
 
@@ -12,7 +13,7 @@ struct Rule
     std::string windowClass;
     RegexType cls = RegexType::nouse;
 
-    bool floating = false;
+    WindowType winType = WindowType::none; 
     float opacityActive = -1;
     float opacityInactive = -1;
 

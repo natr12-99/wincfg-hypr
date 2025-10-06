@@ -1,6 +1,7 @@
 #pragma once
 
 #include "include/regextype.h"
+#include "include/windowtype.h"
 #include "string"
 #include "vector"
 class Loader
@@ -10,7 +11,7 @@ class Loader
                        std::vector<std::string>& winClasses, std::vector<RegexType>& RClasses,
                        std::vector<std::vector<int>>& lineNum, std::string path);
 
-    bool LoadFull(std::vector<int>& ruleLineNum, bool& isFloating, int& opacityActive, int& opacityInactive,
+    bool LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& opacityActive, int& opacityInactive,
                   std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY, std::string path);
 
   private:

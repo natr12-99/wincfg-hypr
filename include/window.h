@@ -10,7 +10,7 @@
 #include "gtkmm/scale.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/window.h"
-#include "include/json.hpp"
+
 #include "include/ruleconfig.h"
 #include <string>
 #include <vector>
@@ -35,7 +35,7 @@ class MainWindow : public Gtk::Window
                   std::vector<int>& ruleLineNum);
     void DeleteRule(std::vector<int>& ruleLineNum);
     void FileErrorAlert();
-    void ModifyOpacity();
+    void SetModifyOpacity();
     Gtk::Box windowSelectBox;
     Gtk::ListBox listClients;
     Gtk::Button refreshListButton;
@@ -52,7 +52,8 @@ class MainWindow : public Gtk::Window
     Gtk::Box editRuleBox;
     Gtk::Box opacityBox;
     Gtk::Entry tittleEntry, classEntry, posXEntry, posYEntry, sizeXEntry, sizeYEntry;
-    Gtk::CheckButton matchT, containT, notUseT, matchC, containC, notUseC, floating, modifyOpacity;
+    Gtk::CheckButton matchT, containT, notUseT, matchC, containC, notUseC, floating, fullscreen, tile, maximize, noType,
+        modifyOpacity;
     Gtk::SpinButton activeOpacity, inactiveOpacity;
     Gtk::Scale activeOpScale, inactiveOpScale;
     Gtk::Button exitFromEditing;

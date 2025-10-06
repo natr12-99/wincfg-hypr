@@ -4,18 +4,19 @@
 #include "gtkmm/alertdialog.h"
 #include "gtkmm/button.h"
 #include "gtkmm/enums.h"
+#include "gtkmm/filedialog.h"
 #include "gtkmm/label.h"
 #include "gtkmm/listboxrow.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
 #include "gtkmm/separator.h"
-#include "include/func.h"
-
-#include "gtkmm/filedialog.h"
 #include "include/firstlaunch.h"
+#include "include/func.h"
+#include "include/json.hpp"
 #include "include/loader.h"
 #include "include/regextype.h"
 #include "include/saver.h"
+#include "include/windowtype.h"
 #include "sigc++/adaptors/bind.h"
 #include "sigc++/functors/mem_fun.h"
 
@@ -229,7 +230,8 @@ void MainWindow::SetRuleStrings(Entry* t, Entry* c)
 
 void MainWindow::SetOpacity(SpinButton* active, SpinButton* inactive, Scale* scale, bool activeToScale)
 {
-    config.ChangeOpacity(active->get_value_as_int(), inactive->get_value_as_int());
+    if (modifyOpacity.get_active())
+        config.ChangeOpacity(active->get_value_as_int(), inactive->get_value_as_int());
 
     scale->freeze_notify();
     if (activeToScale)
@@ -249,7 +251,7 @@ void MainWindow::SetPos()
     config.ChangePos(posXEntry.get_text(), posYEntry.get_text());
 }
 
-void MainWindow::ModifyOpacity()
+void MainWindow::SetModifyOpacity()
 {
     if (!modifyOpacity.get_active())
     {
@@ -266,6 +268,7 @@ void MainWindow::ModifyOpacity()
 void MainWindow::InitRuleEditor()
 {
     Label tittleLabel("Window tittle", 55);
+    editRuleBox.set_margin(5);
     editRuleBox.append(tittleLabel);
     editRuleBox.set_orientation(Orientation::VERTICAL);
 
@@ -327,7 +330,7 @@ void MainWindow::InitRuleEditor()
     editRuleBox.append(modifyOpacity);
     modifyOpacity.set_label("Modify opacity");
     modifyOpacity.set_active(false);
-    modifyOpacity.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::ModifyOpacity));
+    modifyOpacity.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::SetModifyOpacity));
     opacityBox.set_orientation(Orientation::VERTICAL);
     opacityBox.set_sensitive(false);
     // прозрачность
@@ -374,11 +377,35 @@ void MainWindow::InitRuleEditor()
     inactiveOpScale.signal_value_changed().connect(
         [this]() { inactiveOpacity.set_value(inactiveOpScale.get_value()); });
 
-    // плаванье
-    floating.set_label("floating");
-    floating.signal_toggled().connect([this]() { config.ChangeFloating(floating.get_active()); });
-    editRuleBox.append(floating);
+    // тип
+    Separator winTypeSeparator;
+    editRuleBox.append(winTypeSeparator);
+    Label winTypeLabel("Window Type");
+    editRuleBox.append(winTypeLabel);
+    Box winTypeBox;
+    floating.set_label("Floating");
+    floating.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::floating); });
+    winTypeBox.append(floating);
+    tile.set_label("Tile");
+    tile.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::tile); });
+    tile.set_group(floating);
+    winTypeBox.append(tile);
+    fullscreen.set_label("Fullscreen");
+    fullscreen.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::fullscreen); });
+    winTypeBox.append(fullscreen);
+    fullscreen.set_group(floating);
+    maximize.set_label("Maximize");
+    maximize.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::maximize); });
+    maximize.set_group(floating);
+    winTypeBox.append(maximize);
+    noType.set_label("No type");
+    noType.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::none); });
+    noType.set_group(floating);
+    winTypeBox.append(noType);
+    editRuleBox.append(winTypeBox);
 
+    Separator sizeSeparator;
+    editRuleBox.append(sizeSeparator);
     // размер
     Label sizeLabel("Size");
     sizeLabel.set_margin(2);
@@ -453,10 +480,10 @@ void MainWindow::ResetRuleEditor()
 {
     notUseC.set_active(true);
     notUseT.set_active(true);
-    floating.set_active(false);
+    noType.set_active(true);
+    modifyOpacity.set_active(false);
     activeOpacity.set_value(100);
     inactiveOpacity.set_value(100);
-    modifyOpacity.set_active(false);
     posXEntry.set_text("");
     posYEntry.set_text("");
     sizeXEntry.set_text("");
@@ -467,11 +494,11 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
                           std::vector<int>& ruleLineNum)
 {
     Loader loader;
-    bool isFloating = false;
     int opacityActive = -1;
     int opacityInactive = -1;
     std::string posX, posY, sizeX, sizeY;
-    if (!loader.LoadFull(ruleLineNum, isFloating, opacityActive, opacityInactive, posX, posY, sizeX, sizeY, configPath))
+    WindowType winType = WindowType::none;
+    if (!loader.LoadFull(ruleLineNum, winType, opacityActive, opacityInactive, posX, posY, sizeX, sizeY, configPath))
     {
         FileErrorAlert();
         return;
@@ -490,36 +517,58 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
         modifyOpacity.set_active(false);
     }
 
-    floating.set_active(isFloating);
-    config.ChangeFloating(isFloating);
+    // floating.set_active(isFloating);
+    switch (winType)
+    {
+    case WindowType::floating:
+        floating.set_active(true);
+        break;
+    case WindowType::fullscreen:
+        fullscreen.set_active(true);
+        break;
+    case WindowType::tile:
+        tile.set_active(true);
+        break;
+    case WindowType::maximize:
+        maximize.set_active(true); // в этой строке не уверен посмотри пж
+        break;
+    case WindowType::none:
+        noType.set_active(true);
+        break;
+    };
+    //  config.ChangeFloating(isFloating);
 
     config.SetLines(ruleLineNum);
 
-    if (rTitle == RegexType::fullMatch)
+    switch (rTitle)
     {
+    case RegexType::fullMatch:
         matchT.set_active(true);
         config.ChangeWinRegEx(RegexType::fullMatch);
-    }
-    else if (rTitle == RegexType::contain)
-    {
+        break;
+    case RegexType::contain:
         containT.set_active(true);
         config.ChangeWinRegEx(RegexType::contain);
-    }
-    else
+        break;
+    default:
         notUseT.set_active(true);
+        break;
+    };
 
-    if (rClass == RegexType::fullMatch)
+    switch (rClass)
     {
+    case RegexType::fullMatch:
         matchC.set_active(true);
         config.ChangeClsRegEx(RegexType::fullMatch);
-    }
-    else if (rClass == RegexType::contain)
-    {
+        break;
+    case RegexType::contain:
         containC.set_active(true);
         config.ChangeClsRegEx(RegexType::contain);
-    }
-    else
+        break;
+    default:
         notUseC.set_active(true);
+        break;
+    };
 
     posXEntry.set_text(posX);
     posYEntry.set_text(posY);
