@@ -10,6 +10,7 @@
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
 #include "gtkmm/separator.h"
+#include "gtkmm/stringlist.h"
 #include "include/firstlaunch.h"
 #include "include/func.h"
 #include "include/json.hpp"
@@ -19,13 +20,14 @@
 #include "include/windowtype.h"
 #include "sigc++/adaptors/bind.h"
 #include "sigc++/functors/mem_fun.h"
+#include <string>
 
 using namespace Gtk;
 
 MainWindow::MainWindow()
 {
     set_title("Hyprland rules editor");
-    set_default_size(500, 500);
+    set_default_size(500, 520);
     set_resizable(false);
     InitRuleEditor();
 
@@ -212,6 +214,7 @@ void MainWindow::RefreshRulesList()
 
         Button* delBut = make_managed<Button>();
         delBut->set_icon_name("edit-delete-symbolic");
+        delBut->set_tooltip_text("Delete rule");
         delBut->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &MainWindow::DeleteRule), ruleLineNum));
         Box box2;
         box2.set_hexpand(true);
@@ -227,7 +230,11 @@ void MainWindow::SetRuleStrings(Entry* t, Entry* c)
 {
     config.ChangeRuleStr(c->get_text(), t->get_text());
 }
-
+void MainWindow::SetRegex()
+{
+    config.ChangeClsRegEx(static_cast<RegexType>(dropdownC.get_selected()));
+    config.ChangeWinRegEx(static_cast<RegexType>(dropdownT.get_selected()));
+}
 void MainWindow::SetOpacity(SpinButton* active, SpinButton* inactive, Scale* scale, bool activeToScale)
 {
     if (modifyOpacity.get_active())
@@ -267,62 +274,46 @@ void MainWindow::SetModifyOpacity()
 
 void MainWindow::InitRuleEditor()
 {
-    Label tittleLabel("Window tittle", 55);
+    Label tittleLabel("Window tittle");
+    tittleLabel.set_margin_bottom(2);
     editRuleBox.set_margin(5);
     editRuleBox.append(tittleLabel);
     editRuleBox.set_orientation(Orientation::VERTICAL);
 
     editRuleBox.append(tittleEntry);
+    std::string tooltipS =
+        "<b>Unimportant:</b> this parameter will not be used in rule\n<b>Exact match:</b> this parameter must be the "
+        "same as the window parameter\n<b>Contain:</b> window parameter must contain this parameter. &lt;any "
+        "text&gt;your rule"
+        "&lt;any "
+        "text&gt;\n<b>Contain left:</b> &lt;any text&gt;your rule\n<b>Contain right:</b> your rule&lt;any text&gt;";
 
-    matchT.set_label("full match");
-    containT.set_label("contains");
-    notUseT.set_label("do not use this parameter");
-
-    containT.set_group(matchT);
-    notUseT.set_group(matchT);
-
-    matchT.signal_toggled().connect(
-        sigc::bind(sigc::mem_fun(config, &RuleConfig::ChangeWinRegEx), RegexType::fullMatch));
-    containT.signal_toggled().connect(
-        sigc::bind(sigc::mem_fun(config, &RuleConfig::ChangeWinRegEx), RegexType::contain));
-    notUseT.signal_toggled().connect(sigc::bind(sigc::mem_fun(config, &RuleConfig::ChangeWinRegEx), RegexType::nouse));
-
-    Box box;
-    box.append(matchT);
-    box.append(containT);
-    box.append(notUseT);
-    editRuleBox.append(box);
+    auto stringList = StringList::create({"Unimportant", "Exact match", "Contain", "Contain Left", "Contain Right"});
+    dropdownT.set_model(stringList);
+    dropdownT.property_selected().signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetRegex));
+    dropdownT.set_tooltip_markup(tooltipS);
+    dropdownT.set_margin_top(2);
+    editRuleBox.append(dropdownT);
 
     Separator separator;
     editRuleBox.append(separator);
 
     Label classLabel("Window class");
+    classLabel.set_margin_bottom(2);
     editRuleBox.append(classLabel);
 
     editRuleBox.append(classEntry);
+
+    dropdownC.set_model(stringList);
+    dropdownC.property_selected().signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetRegex));
+    dropdownC.set_tooltip_markup(tooltipS);
+    dropdownC.set_margin_top(2);
+    editRuleBox.append(dropdownC);
 
     tittleEntry.signal_changed().connect(
         sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &tittleEntry, &classEntry));
     classEntry.signal_changed().connect(
         sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &tittleEntry, &classEntry));
-
-    matchC.set_label("full match");
-    containC.set_label("contains");
-    notUseC.set_label("do not use this parameter");
-    containC.set_group(matchC);
-    notUseC.set_group(matchC);
-
-    matchC.signal_toggled().connect(
-        sigc::bind(sigc::mem_fun(config, &RuleConfig::ChangeClsRegEx), RegexType::fullMatch));
-    containC.signal_toggled().connect(
-        sigc::bind(sigc::mem_fun(config, &RuleConfig::ChangeClsRegEx), RegexType::contain));
-    notUseC.signal_toggled().connect(sigc::bind(sigc::mem_fun(config, &RuleConfig::ChangeClsRegEx), RegexType::nouse));
-
-    Box box2;
-    box2.append(matchC);
-    box2.append(containC);
-    box2.append(notUseC);
-    editRuleBox.append(box2);
 
     Separator separator2;
     editRuleBox.append(separator2); // раздел2
@@ -478,8 +469,8 @@ void MainWindow::OpenRuleEditor(std::string wTitle, std::string wClass, Box* _pr
 
 void MainWindow::ResetRuleEditor()
 {
-    notUseC.set_active(true);
-    notUseT.set_active(true);
+    dropdownT.set_selected(0);
+    dropdownC.set_selected(0);
     noType.set_active(true);
     modifyOpacity.set_active(false);
     activeOpacity.set_value(100);
@@ -540,35 +531,9 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
 
     config.SetLines(ruleLineNum);
 
-    switch (rTitle)
-    {
-    case RegexType::fullMatch:
-        matchT.set_active(true);
-        config.ChangeWinRegEx(RegexType::fullMatch);
-        break;
-    case RegexType::contain:
-        containT.set_active(true);
-        config.ChangeWinRegEx(RegexType::contain);
-        break;
-    default:
-        notUseT.set_active(true);
-        break;
-    };
+    dropdownT.set_selected(static_cast<int>(rTitle));
 
-    switch (rClass)
-    {
-    case RegexType::fullMatch:
-        matchC.set_active(true);
-        config.ChangeClsRegEx(RegexType::fullMatch);
-        break;
-    case RegexType::contain:
-        containC.set_active(true);
-        config.ChangeClsRegEx(RegexType::contain);
-        break;
-    default:
-        notUseC.set_active(true);
-        break;
-    };
+    dropdownC.set_selected(static_cast<int>(rClass));
 
     posXEntry.set_text(posX);
     posYEntry.set_text(posY);

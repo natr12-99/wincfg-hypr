@@ -1,4 +1,5 @@
 #include "include/loader.h"
+#include "include/regextype.h"
 
 #include <fstream>
 #include <regex>
@@ -146,15 +147,27 @@ bool Loader::FindMatches(std::vector<std::string>& vec, std::vector<std::string>
 
 RegexType Loader::GetRType(std::string& input)
 {
-    if (input.compare(0, 1, "^") == 0 && input.compare(input.length() - 1, 1, "$") == 0)
+    if (input.starts_with("^") && input.ends_with("$"))
     {
         input = input.substr(1, input.length() - 2);
         return RegexType::fullMatch;
     }
-    else if (input.compare(0, 2, ".*") == 0 && input.compare(input.length() - 2, 2, ".*") == 0)
+    else if (input.starts_with(".*"))
     {
-        input = input.substr(2, input.length() - 4);
-        return RegexType::contain;
+        input = input.substr(2);
+
+        if (input.ends_with(".*"))
+        {
+            input = input.substr(0, input.length() - 2);
+            return RegexType::contain;
+        }
+        else
+            return RegexType::containLeft;
+    }
+    else if (input.ends_with(".*"))
+    {
+        input = input.substr(0, input.length() - 2);
+        return RegexType::containRight;
     }
     else
     {

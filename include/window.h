@@ -11,6 +11,7 @@
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/window.h"
 
+#include "gtkmm/dropdown.h"
 #include "include/ruleconfig.h"
 #include <string>
 #include <vector>
@@ -36,6 +37,7 @@ class MainWindow : public Gtk::Window
     void DeleteRule(std::vector<int>& ruleLineNum);
     void FileErrorAlert();
     void SetModifyOpacity();
+    void SetRegex();
     Gtk::Box windowSelectBox;
     Gtk::ListBox listClients;
     Gtk::Button refreshListButton;
@@ -52,11 +54,11 @@ class MainWindow : public Gtk::Window
     Gtk::Box editRuleBox;
     Gtk::Box opacityBox;
     Gtk::Entry tittleEntry, classEntry, posXEntry, posYEntry, sizeXEntry, sizeYEntry;
-    Gtk::CheckButton matchT, containT, notUseT, matchC, containC, notUseC, floating, fullscreen, tile, maximize, noType,
-        modifyOpacity;
+    Gtk::CheckButton floating, fullscreen, tile, maximize, noType, modifyOpacity;
     Gtk::SpinButton activeOpacity, inactiveOpacity;
     Gtk::Scale activeOpScale, inactiveOpScale;
     Gtk::Button exitFromEditing;
+    Gtk::DropDown dropdownC, dropdownT;
 
     RuleConfig config;
     std::string configPath;

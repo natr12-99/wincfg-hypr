@@ -2,7 +2,9 @@
 
 enum class RegexType
 {
+    nouse,
     fullMatch,
     contain,
-    nouse
+    containLeft,
+    containRight
 };

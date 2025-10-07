@@ -1,4 +1,5 @@
 #include "include/saver.h"
+#include "include/regextype.h"
 #include "include/rule.h"
 #include <algorithm>
 #include <fstream>
@@ -147,32 +148,57 @@ void Saver::GetStrings(Rule* rule, std::string& winTypeStr, std::string& opacity
     std::string ruleCondition;
     std::string ruleStart = "windowrule = ";
     bool nameExist = false;
-    if (rule->win == RegexType::fullMatch)
+
+    switch (rule->win)
     {
+    case RegexType::fullMatch:
         ruleCondition += "title:^" + rule->windowName + "$";
         nameExist = true;
-    }
-    else if (rule->win == RegexType::contain)
-    {
+        break;
+    case RegexType::contain:
         ruleCondition += "title:.*" + rule->windowName + ".*";
         nameExist = true;
+        break;
+    case RegexType::containLeft:
+        ruleCondition += "title:.*" + rule->windowName;
+        nameExist = true;
+        break;
+    case RegexType::containRight:
+        ruleCondition += "title:" + rule->windowName + ".*";
+        nameExist = true;
+        break;
     }
 
-    if (rule->cls == RegexType::fullMatch)
+    switch (rule->cls)
     {
+    case RegexType::fullMatch:
         if (nameExist)
         {
             ruleCondition += ", ";
         }
         ruleCondition += "class:^" + rule->windowClass + "$";
-    }
-    else if (rule->cls == RegexType::contain)
-    {
+        break;
+    case RegexType::contain:
         if (nameExist)
         {
             ruleCondition += ", ";
         }
         ruleCondition += "class:.*" + rule->windowClass + ".*";
+        break;
+    case RegexType::containLeft:
+        if (nameExist)
+        {
+            ruleCondition += ", ";
+        }
+        ruleCondition += "class:.*" + rule->windowClass;
+        break;
+    case RegexType::containRight:
+        if (nameExist)
+        {
+            ruleCondition += ", ";
+        }
+        ruleCondition += "class:" + rule->windowClass + ".*";
+        break;
     }
 
     switch (rule->winType)

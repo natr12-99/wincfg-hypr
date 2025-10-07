@@ -1,4 +1,4 @@
-project('wincfg', 'cpp', version: '1😎', default_options: ['cpp_std=c++17'])
+project('wincfg', 'cpp', version: '1😎', default_options: ['cpp_std=c++20'])
 
 gtkmm_dep = dependency('gtkmm-4.0')
 
