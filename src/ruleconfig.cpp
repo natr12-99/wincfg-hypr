@@ -72,5 +72,5 @@ bool RuleConfig::Save(std::string path)
 
 void RuleConfig::ChangePinned(bool isPinned)
 {
-    rule->isPinned = isPinned; 
+    rule->isPinned = isPinned;
 }

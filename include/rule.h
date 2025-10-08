@@ -1,7 +1,7 @@
 #pragma once
 
-#include "regextype.h"
 #include "include/windowtype.h"
+#include "regextype.h"
 #include "string"
 #include "vector"
 
@@ -13,7 +13,7 @@ struct Rule
     std::string windowClass;
     RegexType cls = RegexType::nouse;
 
-    WindowType winType = WindowType::none; 
+    WindowType winType = WindowType::none;
     float opacityActive = -1;
     float opacityInactive = -1;
 
@@ -22,8 +22,8 @@ struct Rule
 
     std::string sizeX;
     std::string sizeY;
-    
-    bool isPinned; 
-    
+
+    bool isPinned;
+
     std::vector<int> lineNum;
 };

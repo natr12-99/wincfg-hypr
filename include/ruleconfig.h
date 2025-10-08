@@ -18,7 +18,7 @@ class RuleConfig
     void RefreshRulesList();
     void ChangePos(std::string x, std::string y);
     bool Save(std::string path);
-    void ChangePinned(bool isPinned); 
+    void ChangePinned(bool isPinned);
 
   private:
     Rule* rule = nullptr;

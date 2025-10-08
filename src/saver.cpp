@@ -47,7 +47,7 @@ bool Saver::SaveStruct(Rule* rule, std::string path)
             rule->lineNum.push_back(lineCount);
             lineCount++;
         }
-        
+
         if (pinStr.length() > 0)
         {
             content.insert(content.begin() + lineCount, pinStr);
@@ -106,7 +106,7 @@ bool Saver::SaveStruct(Rule* rule, std::string path)
             tvec.push_back(lineCount);
             lineCount++;
         }
-        
+
         if (pinStr.length() > 0)
         {
             file << pinStr << std::endl;
@@ -157,7 +157,7 @@ bool Saver::DeleteStrings(std::vector<int>& ruleLineNum, std::vector<std::string
 }
 
 void Saver::GetStrings(Rule* rule, std::string& winTypeStr, std::string& opacityStr, std::string& posStr,
-                       std::string& sizeStr, std:: string& pinStr)
+                       std::string& sizeStr, std::string& pinStr)
 {
     std::string ruleCondition;
     std::string ruleStart = "windowrule = ";
@@ -246,9 +246,9 @@ void Saver::GetStrings(Rule* rule, std::string& winTypeStr, std::string& opacity
     {
         sizeStr = ruleStart + "size " + rule->sizeX + " " + rule->sizeY + "," + ruleCondition;
     }
-    
+
     if (rule->isPinned)
-    pinStr = ruleStart + "pin," + ruleCondition; 
+        pinStr = ruleStart + "pin," + ruleCondition;
 }
 
 std::string Saver::ToString(float value)
