@@ -53,7 +53,7 @@ class MainWindow : public Gtk::Window
     Gtk::Box* prevBox;
     Gtk::Box editRuleBox;
     Gtk::Box opacityBox;
-    Gtk::Entry tittleEntry, classEntry, posXEntry, posYEntry, sizeXEntry, sizeYEntry;
+    Gtk::Entry titleEntry, classEntry, posXEntry, posYEntry, sizeXEntry, sizeYEntry;
     Gtk::CheckButton floating, fullscreen, tile, maximize, noType, modifyOpacity;
     Gtk::SpinButton activeOpacity, inactiveOpacity;
     Gtk::Scale activeOpScale, inactiveOpScale;

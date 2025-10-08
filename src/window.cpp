@@ -274,13 +274,13 @@ void MainWindow::SetModifyOpacity()
 
 void MainWindow::InitRuleEditor()
 {
-    Label tittleLabel("Window tittle");
-    tittleLabel.set_margin_bottom(2);
+    Label titleLabel("Window title");
+    titleLabel.set_margin_bottom(2);
     editRuleBox.set_margin(5);
-    editRuleBox.append(tittleLabel);
+    editRuleBox.append(titleLabel);
     editRuleBox.set_orientation(Orientation::VERTICAL);
 
-    editRuleBox.append(tittleEntry);
+    editRuleBox.append(titleEntry);
     std::string tooltipS =
         "<b>Unimportant:</b> this parameter will not be used in rule\n<b>Exact match:</b> this parameter must be the "
         "same as the window parameter\n<b>Contain:</b> window parameter must contain this parameter. &lt;any "
@@ -310,11 +310,13 @@ void MainWindow::InitRuleEditor()
     dropdownC.set_margin_top(2);
     editRuleBox.append(dropdownC);
 
-    tittleEntry.signal_changed().connect(
-        sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &tittleEntry, &classEntry));
+    titleEntry.signal_changed().connect(
+        sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &titleEntry, &classEntry));
     classEntry.signal_changed().connect(
-        sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &tittleEntry, &classEntry));
-
+        sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &titleEntry, &classEntry));
+    
+    classEntry.set_tooltip_text("Windows with class matching RegEx below"); 
+    titleEntry.set_tooltip_text("Windows with title matching RegEx below"); 
     Separator separator2;
     editRuleBox.append(separator2); // раздел2
 
@@ -375,21 +377,25 @@ void MainWindow::InitRuleEditor()
     editRuleBox.append(winTypeLabel);
     Box winTypeBox;
     floating.set_label("Floating");
+    floating.set_tooltip_text("Floats a window"); 
     floating.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::floating); });
     winTypeBox.append(floating);
     tile.set_label("Tile");
+    tile.set_tooltip_text("Tiles a window"); 
     tile.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::tile); });
     tile.set_group(floating);
     winTypeBox.append(tile);
     fullscreen.set_label("Fullscreen");
+    fullscreen.set_tooltip_tex("Fullscreens a window"); 
     fullscreen.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::fullscreen); });
     winTypeBox.append(fullscreen);
     fullscreen.set_group(floating);
     maximize.set_label("Maximize");
+    maximize.set_tooltip_text("Maximizes a window"); 
     maximize.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::maximize); });
     maximize.set_group(floating);
     winTypeBox.append(maximize);
-    noType.set_label("No type");
+    noType.set_label("Default");
     noType.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::none); });
     noType.set_group(floating);
     winTypeBox.append(noType);
@@ -411,7 +417,8 @@ void MainWindow::InitRuleEditor()
     editRuleBox.append(sizeBox);
     sizeXEntry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetSize));
     sizeYEntry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetSize));
-
+    sizeXEntry.set_tooltip_text("Resizes a floating window. Can be int or %, e.g. 1280 or 50%");
+    sizeYEntry.set_tooltip_text("Resizes a floating window. Can be int or %, e.g. 1280 or 50%"); 
     // положение
     Label posLabel("Position");
     posLabel.set_margin(2);
@@ -426,7 +433,8 @@ void MainWindow::InitRuleEditor()
     editRuleBox.append(posBox);
     posXEntry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetPos));
     posYEntry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetPos));
-
+    posXEntry.set_tooltip_text("Moves a floating window. Can be int or %, e.g. 1280 or 50%");
+    posYEntry.set_tooltip_text("Moves a floating window. Can be int or %, e.g. 1280 or 50%");
     // все остальное
     Box spacer(Orientation::VERTICAL);
     spacer.set_hexpand(true);
@@ -462,7 +470,7 @@ void MainWindow::OpenRuleEditor(std::string wTitle, std::string wClass, Box* _pr
     config.InitRule(wTitle, wClass);
 
     prevBox = _prevBox;
-    tittleEntry.set_text(wTitle);
+    titleEntry.set_text(wTitle);
     classEntry.set_text(wClass);
     set_child(editRuleBox);
 }
