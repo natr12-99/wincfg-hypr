@@ -275,8 +275,10 @@ void MainWindow::SetModifyOpacity()
 void MainWindow::InitRuleEditor()
 {
     mainEditRuleBox.set_orientation(Orientation::VERTICAL);
-    Label titleLabel("Window title");
+    Label titleLabel;
+    titleLabel.set_markup("<b>Window title</b>");
     titleLabel.set_margin_bottom(2);
+    titleLabel.set_halign(Align::START);
     Box editRuleBox;
     ScrolledWindow editRuleWindow;
     editRuleWindow.set_vexpand(true);
@@ -301,11 +303,10 @@ void MainWindow::InitRuleEditor()
     dropdownT.set_margin_top(2);
     editRuleBox.append(dropdownT);
 
-    Separator separator;
-    editRuleBox.append(separator);
-
     Label classLabel("Window class");
+    classLabel.set_markup("<b>Window class</b>");
     classLabel.set_margin_bottom(2);
+    classLabel.set_halign(Align::START);
     editRuleBox.append(classLabel);
 
     editRuleBox.append(classEntry);
@@ -323,11 +324,15 @@ void MainWindow::InitRuleEditor()
 
     classEntry.set_tooltip_text("Windows with class matching RegEx below");
     titleEntry.set_tooltip_text("Windows with title matching RegEx below");
-    Separator separator2;
-    editRuleBox.append(separator2); // раздел2
-
-    editRuleBox.append(modifyOpacity);
-    modifyOpacity.set_label("Modify opacity");
+    // раздел2
+    Box mopactiyBox;
+    mopactiyBox.append(modifyOpacity);
+    Label opacityLabel;
+    opacityLabel.set_markup("<b> Modify opacity</b>");
+    opacityLabel.set_halign(Align::START);
+    mopactiyBox.append(opacityLabel);
+    editRuleBox.append(mopactiyBox);
+    // modifyOpacity.set_label_markup("Modify opacity");
     modifyOpacity.set_active(false);
     modifyOpacity.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::SetModifyOpacity));
     opacityBox.set_orientation(Orientation::VERTICAL);
@@ -378,9 +383,11 @@ void MainWindow::InitRuleEditor()
         [this]() { inactiveOpacity.set_value(inactiveOpScale.get_value()); });
 
     // тип
-    Separator winTypeSeparator;
-    editRuleBox.append(winTypeSeparator);
-    Label winTypeLabel("Window Type");
+
+    Label winTypeLabel;
+    editRuleBox.append(winTypeLabel);
+    winTypeLabel.set_markup("<b>Window type</b>");
+    winTypeLabel.set_halign(Align::START);
     editRuleBox.append(winTypeLabel);
     Box winTypeBox;
     floating.set_label("Floating");
@@ -408,10 +415,10 @@ void MainWindow::InitRuleEditor()
     winTypeBox.append(noType);
     editRuleBox.append(winTypeBox);
 
-    Separator sizeSeparator;
-    editRuleBox.append(sizeSeparator);
     // размер
-    Label sizeLabel("Size");
+    Label sizeLabel;
+    sizeLabel.set_halign(Align::START);
+    sizeLabel.set_markup("<b>Size</b>");
     sizeLabel.set_margin(2);
     editRuleBox.append(sizeLabel);
     Box sizeBox;
@@ -427,7 +434,10 @@ void MainWindow::InitRuleEditor()
     sizeXEntry.set_tooltip_text("Resizes a floating window. Can be int or %, e.g. 1280 or 50%");
     sizeYEntry.set_tooltip_text("Resizes a floating window. Can be int or %, e.g. 1280 or 50%");
     // положение
-    Label posLabel("Position");
+    Label posLabel;
+    posLabel.set_halign(Align::START);
+    posLabel.set_markup("<b>Position</b>");
+    editRuleBox.append(posLabel);
     posLabel.set_margin(2);
     editRuleBox.append(posLabel);
     Box posBox;
@@ -443,10 +453,14 @@ void MainWindow::InitRuleEditor()
     posXEntry.set_tooltip_text("Moves a floating window. Can be int or %, e.g. 1280 or 50%");
     posYEntry.set_tooltip_text("Moves a floating window. Can be int or %, e.g. 1280 or 50%");
     // закреп
-    pinned.set_label("Pin");
+    Label pinLabel;
+    Box pinBox;
+    pinLabel.set_markup("<b> Pin window</b>");
+    pinBox.append(pinned);
+    pinBox.append(pinLabel);
     pinned.set_tooltip_text("Pins the window (i.e. show it on all workspaces). Note: floating only.");
     pinned.signal_toggled().connect([this]() { config.ChangePinned(pinned.get_active()); });
-    editRuleBox.append(pinned);
+    editRuleBox.append(pinBox);
     // все остальное
 
     Box bottomBox;
