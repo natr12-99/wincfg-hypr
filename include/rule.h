@@ -22,6 +22,8 @@ struct Rule
 
     std::string sizeX;
     std::string sizeY;
-
+    
+    bool isPinned; 
+    
     std::vector<int> lineNum;
 };

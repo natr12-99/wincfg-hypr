@@ -12,7 +12,7 @@ class Loader
                        std::vector<std::vector<int>>& lineNum, std::string path);
 
     bool LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& opacityActive, int& opacityInactive,
-                  std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY, std::string path);
+                  std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY,bool& isPinned, std::string path);
 
   private:
     bool FindMatches(std::vector<std::string>& vec, std::vector<std::string>& vec2, std::vector<RegexType>& type1,

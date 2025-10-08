@@ -274,8 +274,14 @@ void MainWindow::SetModifyOpacity()
 
 void MainWindow::InitRuleEditor()
 {
+    mainEditRuleBox.set_orientation(Orientation::VERTICAL);
     Label titleLabel("Window title");
     titleLabel.set_margin_bottom(2);
+    Box editRuleBox;
+    ScrolledWindow editRuleWindow;
+    editRuleWindow.set_vexpand(true);
+    editRuleWindow.set_child(editRuleBox);
+    mainEditRuleBox.append(editRuleWindow);
     editRuleBox.set_margin(5);
     editRuleBox.append(titleLabel);
     editRuleBox.set_orientation(Orientation::VERTICAL);
@@ -314,9 +320,9 @@ void MainWindow::InitRuleEditor()
         sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &titleEntry, &classEntry));
     classEntry.signal_changed().connect(
         sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &titleEntry, &classEntry));
-    
-    classEntry.set_tooltip_text("Windows with class matching RegEx below"); 
-    titleEntry.set_tooltip_text("Windows with title matching RegEx below"); 
+
+    classEntry.set_tooltip_text("Windows with class matching RegEx below");
+    titleEntry.set_tooltip_text("Windows with title matching RegEx below");
     Separator separator2;
     editRuleBox.append(separator2); // раздел2
 
@@ -351,6 +357,7 @@ void MainWindow::InitRuleEditor()
     inactiveOpBox.append(inacL);
     inactiveOpScale.set_hexpand(true);
     inactiveOpScale.set_range(0, 100);
+    inactiveOpScale.set_increments(1, 10);
     inactiveOpScale.set_value(100);
     inactiveOpBox.append(inactiveOpScale);
     inactiveOpacity.set_range(0, 100);
@@ -377,21 +384,21 @@ void MainWindow::InitRuleEditor()
     editRuleBox.append(winTypeLabel);
     Box winTypeBox;
     floating.set_label("Floating");
-    floating.set_tooltip_text("Floats a window"); 
+    floating.set_tooltip_text("Floats a window");
     floating.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::floating); });
     winTypeBox.append(floating);
     tile.set_label("Tile");
-    tile.set_tooltip_text("Tiles a window"); 
+    tile.set_tooltip_text("Tiles a window");
     tile.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::tile); });
     tile.set_group(floating);
     winTypeBox.append(tile);
     fullscreen.set_label("Fullscreen");
-    fullscreen.set_tooltip_tex("Fullscreens a window"); 
+    fullscreen.set_tooltip_text("Fullscreens a window");
     fullscreen.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::fullscreen); });
     winTypeBox.append(fullscreen);
     fullscreen.set_group(floating);
     maximize.set_label("Maximize");
-    maximize.set_tooltip_text("Maximizes a window"); 
+    maximize.set_tooltip_text("Maximizes a window");
     maximize.signal_toggled().connect([this]() { config.ChangeWindowType(WindowType::maximize); });
     maximize.set_group(floating);
     winTypeBox.append(maximize);
@@ -418,7 +425,7 @@ void MainWindow::InitRuleEditor()
     sizeXEntry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetSize));
     sizeYEntry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetSize));
     sizeXEntry.set_tooltip_text("Resizes a floating window. Can be int or %, e.g. 1280 or 50%");
-    sizeYEntry.set_tooltip_text("Resizes a floating window. Can be int or %, e.g. 1280 or 50%"); 
+    sizeYEntry.set_tooltip_text("Resizes a floating window. Can be int or %, e.g. 1280 or 50%");
     // положение
     Label posLabel("Position");
     posLabel.set_margin(2);
@@ -435,11 +442,12 @@ void MainWindow::InitRuleEditor()
     posYEntry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetPos));
     posXEntry.set_tooltip_text("Moves a floating window. Can be int or %, e.g. 1280 or 50%");
     posYEntry.set_tooltip_text("Moves a floating window. Can be int or %, e.g. 1280 or 50%");
+    // закреп
+    pinned.set_label("Pin");
+    pinned.set_tooltip_text("Pins the window (i.e. show it on all workspaces). Note: floating only.");
+    pinned.signal_toggled().connect([this]() { config.ChangePinned(pinned.get_active()); });
+    editRuleBox.append(pinned);
     // все остальное
-    Box spacer(Orientation::VERTICAL);
-    spacer.set_hexpand(true);
-    spacer.set_vexpand(true);
-    editRuleBox.append(spacer);
 
     Box bottomBox;
     Button* exitB = make_managed<Button>("Canel");
@@ -462,7 +470,7 @@ void MainWindow::InitRuleEditor()
     bottomBox.append(t);
     bottomBox.append(*exitB);
     bottomBox.append(*saveB);
-    editRuleBox.append(bottomBox);
+    mainEditRuleBox.append(bottomBox);
 }
 
 void MainWindow::OpenRuleEditor(std::string wTitle, std::string wClass, Box* _prevBox)
@@ -472,7 +480,7 @@ void MainWindow::OpenRuleEditor(std::string wTitle, std::string wClass, Box* _pr
     prevBox = _prevBox;
     titleEntry.set_text(wTitle);
     classEntry.set_text(wClass);
-    set_child(editRuleBox);
+    set_child(mainEditRuleBox);
 }
 
 void MainWindow::ResetRuleEditor()
@@ -487,6 +495,7 @@ void MainWindow::ResetRuleEditor()
     posYEntry.set_text("");
     sizeXEntry.set_text("");
     sizeYEntry.set_text("");
+    pinned.set_active(false);
 }
 
 void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wClass, RegexType rClass,
@@ -497,7 +506,9 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
     int opacityInactive = -1;
     std::string posX, posY, sizeX, sizeY;
     WindowType winType = WindowType::none;
-    if (!loader.LoadFull(ruleLineNum, winType, opacityActive, opacityInactive, posX, posY, sizeX, sizeY, configPath))
+    bool isPinned = false;
+    if (!loader.LoadFull(ruleLineNum, winType, opacityActive, opacityInactive, posX, posY, sizeX, sizeY, isPinned,
+                         configPath))
     {
         FileErrorAlert();
         return;
@@ -516,7 +527,6 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
         modifyOpacity.set_active(false);
     }
 
-    // floating.set_active(isFloating);
     switch (winType)
     {
     case WindowType::floating:
@@ -529,24 +539,26 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
         tile.set_active(true);
         break;
     case WindowType::maximize:
-        maximize.set_active(true); // в этой строке не уверен посмотри пж
+        maximize.set_active(true);
         break;
     case WindowType::none:
         noType.set_active(true);
         break;
     };
-    //  config.ChangeFloating(isFloating);
-
+    config.ChangeWindowType(winType);
     config.SetLines(ruleLineNum);
 
     dropdownT.set_selected(static_cast<int>(rTitle));
-
+    config.ChangeWinRegEx(rTitle);
     dropdownC.set_selected(static_cast<int>(rClass));
-
+    config.ChangeClsRegEx(rClass);
     posXEntry.set_text(posX);
     posYEntry.set_text(posY);
     sizeXEntry.set_text(sizeX);
     sizeYEntry.set_text(sizeY);
+
+    pinned.set_active(isPinned);
+    config.ChangePinned(isPinned);
 }
 
 void MainWindow::DeleteRule(std::vector<int>& ruleLineNum)

@@ -74,7 +74,7 @@ bool Loader::LoadOnlyNames(std::vector<std::string>& winNames, std::vector<Regex
 }
 
 bool Loader::LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& opacityActive, int& opacityInactive,
-                      std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY, std::string path)
+                      std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY,bool& isPinned, std::string path)
 {
     using namespace std;
     setlocale(LC_ALL, "C");
@@ -123,6 +123,8 @@ bool Loader::LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& o
                     if (matches[4].matched)
                         sizeY = matches[4];
                 }
+                else if(matches[2].compare("pin") == 0)
+                isPinned =true; 
             }
             vecIndex++;
         }

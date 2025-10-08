@@ -69,3 +69,8 @@ bool RuleConfig::Save(std::string path)
     Saver saver;
     return saver.SaveStruct(rule, path);
 }
+
+void RuleConfig::ChangePinned(bool isPinned)
+{
+    rule->isPinned = isPinned; 
+}
