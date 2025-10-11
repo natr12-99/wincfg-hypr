@@ -12,6 +12,7 @@
 #include "gtkmm/window.h"
 
 #include "gtkmm/dropdown.h"
+#include "gtkmm/searchentry2.h"
 #include "include/ruleconfig.h"
 #include <string>
 #include <vector>
@@ -22,6 +23,7 @@ class MainWindow : public Gtk::Window
     MainWindow();
 
   private:
+    bool FilterRulesList(Gtk::ListBoxRow* row);
     void SelectConfigPath();
     void RefreshWindowsList();
     void RefreshRulesList();
@@ -59,6 +61,7 @@ class MainWindow : public Gtk::Window
     Gtk::Scale activeOpScale, inactiveOpScale;
     Gtk::Button exitFromEditing;
     Gtk::DropDown dropdownC, dropdownT;
+    Gtk::SearchEntry2 rulesListSearch;
 
     RuleConfig config;
     std::string configPath;

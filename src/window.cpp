@@ -9,7 +9,6 @@
 #include "gtkmm/listboxrow.h"
 #include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
-#include "gtkmm/separator.h"
 #include "gtkmm/stringlist.h"
 #include "include/firstlaunch.h"
 #include "include/func.h"
@@ -93,8 +92,13 @@ MainWindow::MainWindow()
     rulesListTopBox.append(ruleSelectL);
     rulesListTopBox.append(refreshRulesListButton);
     rulesListTopBox.append(goToWindowsList);
-
     ruleSelectBox.append(rulesListTopBox);
+
+    rulesListSearch.set_margin(5);
+    rulesListSearch.set_placeholder_text("Search rule");
+    rulesListSearch.signal_search_changed().connect([this]() { listRules.invalidate_filter(); });
+    listRules.set_filter_func(sigc::mem_fun(*this, &MainWindow::FilterRulesList));
+    ruleSelectBox.append(rulesListSearch);
     ScrolledWindow swRules;
     swRules.set_child(listRules);
     swRules.set_vexpand(true);
@@ -115,6 +119,20 @@ MainWindow::MainWindow()
         configPath = settings->get_string("config-path");
         RefreshRulesList();
     }
+}
+
+bool MainWindow::FilterRulesList(Gtk::ListBoxRow* row)
+{
+    std::string searchT = rulesListSearch.get_text();
+    if (searchT.empty())
+        return true;
+
+    auto child = dynamic_cast<Gtk::Box*>(row->get_child());
+    auto child2 = dynamic_cast<Gtk::Button*>(child->get_first_child());
+
+    std::string textL = Glib::ustring(child2->get_label()).lowercase();
+    std::string searchL = Glib::ustring(searchT).lowercase();
+    return textL.find(searchL) != std::string::npos;
 }
 
 void MainWindow::RefreshWindowsList()
@@ -140,21 +158,13 @@ void MainWindow::RefreshWindowsList()
 
     for (auto item : clients)
     {
-        Button* but = make_managed<Button>();
         ListBoxRow row;
-        std::string s_class = "class: ";
-        s_class += item["class"];
-        std::string s_title = "title: ";
-        s_title += item["title"];
+        std::string s_class = item["class"];
+        std::string s_title = item["title"];
 
-        Box box;
-        box.set_orientation(Orientation::VERTICAL);
-        Label wClass(s_class);
-        Label wTitle(s_title);
-
-        box.append(wTitle);
-        box.append(wClass);
-        but->set_child(box);
+        Button* but = make_managed<Button>("class: " + s_class + "\ntitle: " + s_title);
+        auto label = dynamic_cast<Gtk::Label*>(but->get_child());
+        label->set_justify(Gtk::Justification::CENTER);
 
         but->signal_clicked().connect([this, item]() {
             OpenRuleEditor(item["title"], item["class"], &windowSelectBox);
@@ -188,9 +198,7 @@ void MainWindow::RefreshRulesList()
     for (int i = 0; i < winNames.size(); i++)
     {
         ListBoxRow row;
-        Button* but = make_managed<Button>();
-        Box box;
-        box.set_orientation(Orientation::VERTICAL);
+
         std::string s_class = winClasses.at(i);
         if (s_class.empty())
             s_class = "class: empty";
@@ -202,13 +210,12 @@ void MainWindow::RefreshRulesList()
         else
             s_title = "title: " + s_title;
         std::vector<int> ruleLineNum = lineNum.at(i);
-        Label wClass(s_class);
-        Label wTitle(s_title);
 
-        box.append(wTitle);
-        box.append(wClass);
+        Button* but = make_managed<Button>(s_title + '\n' + s_class);
+        auto label = dynamic_cast<Gtk::Label*>(but->get_child());
+        label->set_justify(Gtk::Justification::CENTER);
+
         but->set_hexpand(true);
-        but->set_child(box);
         but->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &MainWindow::LoadRule), winNames.at(i),
                                                  RNames.at(i), winClasses.at(i), RClasses.at(i), ruleLineNum));
 
