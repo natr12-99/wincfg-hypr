@@ -13,7 +13,7 @@ class Loader
 
     bool LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& opacityActive, int& opacityInactive,
                   std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY, bool& isPinned,
-                  std::string path);
+                  bool& noMaxSize, bool& stayFocused, bool& noInitialFocus, std::string path);
 
   private:
     bool FindMatches(std::vector<std::string>& vec, std::vector<std::string>& vec2, std::vector<RegexType>& type1,

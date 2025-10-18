@@ -25,5 +25,9 @@ struct Rule
 
     bool isPinned;
 
+    bool noInitialFocus;
+    bool stayFocused;
+    bool noMaxSize;
+
     std::vector<int> lineNum;
 };

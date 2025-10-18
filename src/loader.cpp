@@ -75,7 +75,7 @@ bool Loader::LoadOnlyNames(std::vector<std::string>& winNames, std::vector<Regex
 
 bool Loader::LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& opacityActive, int& opacityInactive,
                       std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY, bool& isPinned,
-                      std::string path)
+                      bool& noMaxSize, bool& stayFocused, bool& noInitialFocus, std::string path)
 {
     using namespace std;
     setlocale(LC_ALL, "C");
@@ -126,6 +126,12 @@ bool Loader::LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& o
                 }
                 else if (matches[2].compare("pin") == 0)
                     isPinned = true;
+                else if (matches[2].compare("stayfocused") == 0) 
+                    stayFocused = true;
+                else if (matches[2].compare("nomaxsize") == 0) 
+                    noMaxSize = true;
+                else if (matches[2].compare("noinitialfocus") == 0)
+                    noInitialFocus = true;
             }
             vecIndex++;
         }

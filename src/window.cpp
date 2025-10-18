@@ -332,14 +332,8 @@ void MainWindow::InitRuleEditor()
     classEntry.set_tooltip_text("Windows with class matching RegEx below");
     titleEntry.set_tooltip_text("Windows with title matching RegEx below");
     // раздел2
-    Box mopactiyBox;
-    mopactiyBox.append(modifyOpacity);
-    Label opacityLabel;
-    opacityLabel.set_markup("<b> Modify opacity</b>");
-    opacityLabel.set_halign(Align::START);
-    mopactiyBox.append(opacityLabel);
-    editRuleBox.append(mopactiyBox);
-    // modifyOpacity.set_label_markup("Modify opacity");
+    modifyOpacity.set_label("Modify opacity");
+    editRuleBox.append(modifyOpacity);
     modifyOpacity.set_active(false);
     modifyOpacity.signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::SetModifyOpacity));
     opacityBox.set_orientation(Orientation::VERTICAL);
@@ -460,15 +454,26 @@ void MainWindow::InitRuleEditor()
     posXEntry.set_tooltip_text("Moves a floating window. Can be int or %, e.g. 1280 or 50%");
     posYEntry.set_tooltip_text("Moves a floating window. Can be int or %, e.g. 1280 or 50%");
     // закреп
-    Label pinLabel;
-    Box pinBox;
-    pinLabel.set_markup("<b> Pin window</b>");
-    pinBox.append(pinned);
-    pinBox.append(pinLabel);
+
+    pinned.set_label("Pin window");
+
     pinned.set_tooltip_text("Pins the window (i.e. show it on all workspaces). Note: floating only.");
     pinned.signal_toggled().connect([this]() { config.ChangePinned(pinned.get_active()); });
-    editRuleBox.append(pinBox);
+    editRuleBox.append(pinned);
     // все остальное
+
+    noInitialFocusCB.set_label("Disable initial focus");
+    noInitialFocusCB.set_tooltip_text("Disables the initial focus to the window"); 
+    noInitialFocusCB.signal_toggled().connect([this]() { config.ChangeNoInitialFocus(noInitialFocusCB.get_active()); });
+    editRuleBox.append(noInitialFocusCB);
+    stayFocusedCB.set_label("Always focused");
+    stayFocusedCB.set_tooltip_text("Forces focus on the window as long as it’s visible."); 
+    stayFocusedCB.signal_toggled().connect([this]() { config.ChangeStayFocused(stayFocusedCB.get_active()); });
+    editRuleBox.append(stayFocusedCB);
+    noMaxSizeCB.set_label("Remove size limitations");
+    noMaxSizeCB.set_tooltip_text("Removes max size limitations. Especially useful with windows that report invalid max sizes (e.g. winecfg)."); 
+    noMaxSizeCB.signal_toggled().connect([this]() { config.ChangeNoMaxSize(noMaxSizeCB.get_active()); });
+    editRuleBox.append(noMaxSizeCB);
 
     Box bottomBox;
     Button* exitB = make_managed<Button>("Canel");
@@ -528,8 +533,11 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
     std::string posX, posY, sizeX, sizeY;
     WindowType winType = WindowType::none;
     bool isPinned = false;
+    bool noInitialFocus = false;
+    bool stayFocused = false;
+    bool noMaxSize = false;
     if (!loader.LoadFull(ruleLineNum, winType, opacityActive, opacityInactive, posX, posY, sizeX, sizeY, isPinned,
-                         configPath))
+                         noMaxSize, stayFocused, noInitialFocus, configPath))
     {
         FileErrorAlert();
         return;
@@ -580,6 +588,13 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
 
     pinned.set_active(isPinned);
     config.ChangePinned(isPinned);
+
+    noInitialFocusCB.set_active(noInitialFocus);
+    config.ChangeNoInitialFocus(noInitialFocus);
+    noMaxSizeCB.set_active(noMaxSize);
+    config.ChangeNoMaxSize(noMaxSize);
+    stayFocusedCB.set_active(stayFocused);
+    config.ChangeStayFocused(stayFocused);
 }
 
 void MainWindow::DeleteRule(std::vector<int>& ruleLineNum)

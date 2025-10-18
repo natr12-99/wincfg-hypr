@@ -16,44 +16,25 @@ bool Saver::SaveStruct(Rule* rule, std::string path)
         if (!DeleteStrings(rule->lineNum, content, path))
             return false;
 
-        std::string winTypeStr, opacityStr, posStr, sizeStr, pinStr;
-        GetStrings(rule, winTypeStr, opacityStr, posStr, sizeStr, pinStr);
+        std::string winTypeStr, opacityStr, posStr, sizeStr, pinStr, noMaxSizeStr, stayFocusedStr, noInitialFocusStr;
+        GetStrings(rule, winTypeStr, opacityStr, posStr, sizeStr, pinStr, noMaxSizeStr, stayFocusedStr,
+                   noInitialFocusStr);
         int lineCount = rule->lineNum.back();
         rule->lineNum.clear();
+        strToVector(winTypeStr, content, lineCount, rule);
 
-        if (winTypeStr.length() > 0)
-        {
-            content.insert(content.begin() + lineCount, winTypeStr);
-            rule->lineNum.push_back(lineCount);
-            lineCount++;
-        }
+        strToVector(opacityStr, content, lineCount, rule);
 
-        if (opacityStr.length() > 0)
-        {
-            content.insert(content.begin() + lineCount, opacityStr);
-            rule->lineNum.push_back(lineCount);
-            lineCount++;
-        }
+        strToVector(posStr, content, lineCount, rule);
 
-        if (posStr.length() > 0)
-        {
-            content.insert(content.begin() + lineCount, posStr);
-            rule->lineNum.push_back(lineCount);
-            lineCount++;
-        }
-        if (sizeStr.length() > 0)
-        {
-            content.insert(content.begin() + lineCount, sizeStr);
-            rule->lineNum.push_back(lineCount);
-            lineCount++;
-        }
+        strToVector(sizeStr, content, lineCount, rule);
 
-        if (pinStr.length() > 0)
-        {
-            content.insert(content.begin() + lineCount, pinStr);
-            rule->lineNum.push_back(lineCount);
-            lineCount++;
-        }
+        strToVector(pinStr, content, lineCount, rule);
+
+        strToVector(noMaxSizeStr, content, lineCount, rule);
+
+        strToVector(stayFocusedStr, content, lineCount, rule);
+        strToVector(noInitialFocusStr, content, lineCount, rule);
 
         std::ofstream outfile(path);
         for (auto str : content)
@@ -75,46 +56,28 @@ bool Saver::SaveStruct(Rule* rule, std::string path)
 
         std::ofstream file(path, std::ios::app);
 
-        std::string winTypeStr, opacityStr, posStr, sizeStr, pinStr;
-        GetStrings(rule, winTypeStr, opacityStr, posStr, sizeStr, pinStr);
+        std::string winTypeStr, opacityStr, posStr, sizeStr, pinStr, noMaxSizeStr, stayFocusedStr, noInitialFocusStr;
+        GetStrings(rule, winTypeStr, opacityStr, posStr, sizeStr, pinStr, noMaxSizeStr, stayFocusedStr,
+                   noInitialFocusStr);
 
-        std::vector<int> tvec;
+        std::vector<int> lineNum;
 
-        if (winTypeStr.length() > 0)
-        {
-            file << winTypeStr << std::endl;
-            tvec.push_back(lineCount);
-            lineCount++;
-        }
+        appendToFile(winTypeStr, file, lineNum, lineCount);
 
-        if (opacityStr.length() > 0)
-        {
-            file << opacityStr << std::endl;
-            tvec.push_back(lineCount);
-            lineCount++;
-        }
+        appendToFile(opacityStr, file, lineNum, lineCount);
 
-        if (posStr.length() > 0)
-        {
-            file << posStr << std::endl;
-            tvec.push_back(lineCount);
-            lineCount++;
-        }
-        if (sizeStr.length() > 0)
-        {
-            file << sizeStr << std::endl;
-            tvec.push_back(lineCount);
-            lineCount++;
-        }
+        appendToFile(posStr, file, lineNum, lineCount);
 
-        if (pinStr.length() > 0)
-        {
-            file << pinStr << std::endl;
-            tvec.push_back(lineCount);
-            lineCount++;
-        }
+        appendToFile(sizeStr, file, lineNum, lineCount);
 
-        rule->lineNum = tvec;
+        appendToFile(pinStr, file, lineNum, lineCount);
+
+        appendToFile(noMaxSizeStr, file, lineNum, lineCount);
+
+        appendToFile(stayFocusedStr, file, lineNum, lineCount);
+        appendToFile(noInitialFocusStr, file, lineNum, lineCount);
+
+        rule->lineNum = lineNum;
 
         file.close();
     }
@@ -157,7 +120,8 @@ bool Saver::DeleteStrings(std::vector<int>& ruleLineNum, std::vector<std::string
 }
 
 void Saver::GetStrings(Rule* rule, std::string& winTypeStr, std::string& opacityStr, std::string& posStr,
-                       std::string& sizeStr, std::string& pinStr)
+                       std::string& sizeStr, std::string& pinStr, std::string& noMaxSizeStr,
+                       std::string& stayFocusedStr, std::string& noInitialFocusStr)
 {
     std::string ruleCondition;
     std::string ruleStart = "windowrule = ";
@@ -227,7 +191,7 @@ void Saver::GetStrings(Rule* rule, std::string& winTypeStr, std::string& opacity
         winTypeStr = ruleStart + "tile," + ruleCondition;
         break;
     case WindowType::maximize:
-        winTypeStr = ruleStart + "maximize," + ruleCondition; // в этой строке не уверен посмотри пж
+        winTypeStr = ruleStart + "maximize," + ruleCondition;
         break;
     };
 
@@ -249,6 +213,15 @@ void Saver::GetStrings(Rule* rule, std::string& winTypeStr, std::string& opacity
 
     if (rule->isPinned)
         pinStr = ruleStart + "pin," + ruleCondition;
+
+    if (rule->noMaxSize)
+        noMaxSizeStr = ruleStart + "nomaxsize," + ruleCondition;
+
+    if (rule->stayFocused)
+        stayFocusedStr = ruleStart + "stayfocused," + ruleCondition;
+
+    if (rule->noInitialFocus)
+        noInitialFocusStr = ruleStart + "noinitialfocus," + ruleCondition;
 }
 
 std::string Saver::ToString(float value)
@@ -257,4 +230,23 @@ std::string Saver::ToString(float value)
     s.imbue(std::locale("C"));
     s << value;
     return s.str();
+}
+void Saver::strToVector(std::string& str, std::vector<std::string>& content, int& lineCount, Rule* rule)
+{
+    if (!str.empty())
+    {
+        content.insert(content.begin() + lineCount, str);
+        rule->lineNum.push_back(lineCount);
+        lineCount++;
+    }
+}
+
+void Saver::appendToFile(std::string& str, std::ofstream& file, std::vector<int> lineNum, int& lineCount)
+{
+    if (!str.empty())
+    {
+        file << str << std::endl;
+        lineNum.push_back(lineCount);
+        lineCount++;
+    }
 }

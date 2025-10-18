@@ -1,7 +1,5 @@
 #pragma once
 #include "giomm/settings.h"
-#include "include/regextype.h"
-
 #include "gtkmm/box.h"
 #include "gtkmm/button.h"
 #include "gtkmm/checkbutton.h"
@@ -10,7 +8,7 @@
 #include "gtkmm/scale.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/window.h"
-
+#include "include/regextype.h"
 #include "gtkmm/dropdown.h"
 #include "gtkmm/searchentry2.h"
 #include "include/ruleconfig.h"
@@ -56,7 +54,8 @@ class MainWindow : public Gtk::Window
     Gtk::Box mainEditRuleBox;
     Gtk::Box opacityBox;
     Gtk::Entry titleEntry, classEntry, posXEntry, posYEntry, sizeXEntry, sizeYEntry;
-    Gtk::CheckButton floating, fullscreen, tile, maximize, noType, modifyOpacity, pinned;
+    Gtk::CheckButton floating, fullscreen, tile, maximize, noType, modifyOpacity, pinned, noInitialFocusCB,
+        stayFocusedCB, noMaxSizeCB;
     Gtk::SpinButton activeOpacity, inactiveOpacity;
     Gtk::Scale activeOpScale, inactiveOpScale;
     Gtk::Button exitFromEditing;

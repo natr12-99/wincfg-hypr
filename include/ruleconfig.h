@@ -1,9 +1,9 @@
 #pragma once
 #include "include/regextype.h"
 #include "include/windowtype.h"
+#include "rule.h"
 #include "string"
 #include <vector>
-class Rule;
 class RuleConfig
 {
   public:
@@ -19,6 +19,18 @@ class RuleConfig
     void ChangePos(std::string x, std::string y);
     bool Save(std::string path);
     void ChangePinned(bool isPinned);
+    void ChangeStayFocused(bool stayFocused)
+    {
+        rule->stayFocused = stayFocused;
+    }
+    void ChangeNoMaxSize(bool noMaxSize)
+    {
+        rule->noMaxSize = noMaxSize;
+    }
+    void ChangeNoInitialFocus(bool noInitialFocus)
+    {
+        rule->noInitialFocus = noInitialFocus;
+    }
 
   private:
     Rule* rule = nullptr;
