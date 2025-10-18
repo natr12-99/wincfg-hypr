@@ -1,6 +1,6 @@
 #include "include/loader.h"
 #include "include/regextype.h"
-
+#include "include/rule.h"
 #include <fstream>
 #include <regex>
 
@@ -73,9 +73,7 @@ bool Loader::LoadOnlyNames(std::vector<std::string>& winNames, std::vector<Regex
     return true;
 }
 
-bool Loader::LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& opacityActive, int& opacityInactive,
-                      std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY, bool& isPinned,
-                      bool& noMaxSize, bool& stayFocused, bool& noInitialFocus, std::string path)
+bool Loader::LoadFull(std::vector<int>& ruleLineNum,Rule* rule,std::string path)
 {
     using namespace std;
     setlocale(LC_ALL, "C");
@@ -99,39 +97,39 @@ bool Loader::LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& o
             if (regex_search(str, matches, pattern))
             {
                 if (matches[2].compare("float") == 0)
-                    winType = WindowType::floating;
+                    rule->winType = WindowType::floating;
                 else if (matches[2].compare("tile") == 0)
-                    winType = WindowType::tile;
+                    rule->winType = WindowType::tile;
                 else if (matches[2].compare("maximize") == 0)
-                    winType = WindowType::maximize;
+                    rule->winType = WindowType::maximize;
                 else if (matches[2].compare("fullscreen") == 0)
-                    winType = WindowType::fullscreen;
+                    rule->winType = WindowType::fullscreen;
                 else if (matches[2].compare("opacity") == 0)
                 {
-                    opacityActive = stof(matches[3]) * 100;
+                    rule->opacityActive = stof(matches[3]) * 100;
                     if (matches[4].matched)
-                        opacityInactive = stof(matches[4]) * 100;
+                        rule->opacityInactive = stof(matches[4]) * 100;
                 }
                 else if (matches[2].compare("move") == 0)
                 {
-                    posX = matches[3];
+                    rule->posX = matches[3];
                     if (matches[4].matched)
-                        posY = matches[4];
+                        rule->posY = matches[4];
                 }
                 else if (matches[2].compare("size") == 0)
                 {
-                    sizeX = matches[3];
+                    rule->sizeX = matches[3];
                     if (matches[4].matched)
-                        sizeY = matches[4];
+                        rule->sizeY = matches[4];
                 }
                 else if (matches[2].compare("pin") == 0)
-                    isPinned = true;
+                    rule->isPinned = true;
                 else if (matches[2].compare("stayfocused") == 0) 
-                    stayFocused = true;
+                    rule->stayFocused = true;
                 else if (matches[2].compare("nomaxsize") == 0) 
-                    noMaxSize = true;
+                    rule->noMaxSize = true;
                 else if (matches[2].compare("noinitialfocus") == 0)
-                    noInitialFocus = true;
+                    rule->noInitialFocus = true;
             }
             vecIndex++;
         }

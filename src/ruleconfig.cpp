@@ -2,35 +2,20 @@
 #include "include/rule.h"
 #include "include/saver.h"
 
-void RuleConfig::InitRule(std::string wName, std::string wClass)
+void RuleConfig::InitRule(std::string wName, std::string wClass, Rule* rul)
 {
     if (nullptr != rule)
         delete rule;
 
-    rule = new Rule();
+    rule = rul; 
     rule->windowClass = wClass;
     rule->windowName = wName;
-}
-
-void RuleConfig::SetLines(std::vector<int>& lines)
-{
-    rule->lineNum = lines;
 }
 
 void RuleConfig::ChangeRuleStr(std::string strC, std::string strN)
 {
     rule->windowClass = strC;
     rule->windowName = strN;
-}
-
-void RuleConfig::ChangeWinRegEx(RegexType type)
-{
-    rule->win = type;
-}
-
-void RuleConfig::ChangeClsRegEx(RegexType type)
-{
-    rule->cls = type;
 }
 
 void RuleConfig::ChangeOpacity(float active, float inactive)
@@ -47,10 +32,6 @@ void RuleConfig::ChangeOpacity(float active, float inactive)
     }
 }
 
-void RuleConfig::ChangeWindowType(WindowType type)
-{
-    rule->winType = type;
-}
 
 void RuleConfig::ChangeSize(std::string x, std::string y)
 {
@@ -68,9 +49,4 @@ bool RuleConfig::Save(std::string path)
 {
     Saver saver;
     return saver.SaveStruct(rule, path);
-}
-
-void RuleConfig::ChangePinned(bool isPinned)
-{
-    rule->isPinned = isPinned;
 }

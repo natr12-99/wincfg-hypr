@@ -1,9 +1,10 @@
 #pragma once
 
 #include "include/regextype.h"
-#include "include/windowtype.h"
 #include "string"
 #include "vector"
+struct Rule; 
+
 class Loader
 {
   public:
@@ -11,9 +12,7 @@ class Loader
                        std::vector<std::string>& winClasses, std::vector<RegexType>& RClasses,
                        std::vector<std::vector<int>>& lineNum, std::string path);
 
-    bool LoadFull(std::vector<int>& ruleLineNum, WindowType& winType, int& opacityActive, int& opacityInactive,
-                  std::string& posX, std::string& posY, std::string& sizeX, std::string& sizeY, bool& isPinned,
-                  bool& noMaxSize, bool& stayFocused, bool& noInitialFocus, std::string path);
+    bool LoadFull(std::vector<int>& ruleLineNum,Rule* rule,std::string path);
 
   private:
     bool FindMatches(std::vector<std::string>& vec, std::vector<std::string>& vec2, std::vector<RegexType>& type1,

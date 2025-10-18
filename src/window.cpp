@@ -14,6 +14,7 @@
 #include "include/func.h"
 #include "include/json.hpp"
 #include "include/loader.h"
+#include "include/rule.h"
 #include "include/regextype.h"
 #include "include/saver.h"
 #include "include/windowtype.h"
@@ -43,7 +44,7 @@ MainWindow::MainWindow()
     newEmtryRuleButton.set_label("New empty rule");
     newEmtryRuleButton.set_margin(5);
     newEmtryRuleButton.signal_clicked().connect([this]() {
-        OpenRuleEditor("", "", &windowSelectBox);
+        OpenRuleEditor("", "", &windowSelectBox, nullptr);
         ResetRuleEditor();
     });
     listClients.set_margin(5);
@@ -167,7 +168,7 @@ void MainWindow::RefreshWindowsList()
         label->set_justify(Gtk::Justification::CENTER);
 
         but->signal_clicked().connect([this, item]() {
-            OpenRuleEditor(item["title"], item["class"], &windowSelectBox);
+            OpenRuleEditor(item["title"], item["class"], &windowSelectBox, nullptr);
             ResetRuleEditor();
         });
 
@@ -499,10 +500,13 @@ void MainWindow::InitRuleEditor()
     mainEditRuleBox.append(bottomBox);
 }
 
-void MainWindow::OpenRuleEditor(std::string wTitle, std::string wClass, Box* _prevBox)
+void MainWindow::OpenRuleEditor(std::string wTitle, std::string wClass, Box* _prevBox, Rule* rule)
 {
-    config.InitRule(wTitle, wClass);
-
+    if (rule == nullptr)
+    rule = new Rule();
+ 
+    config.InitRule(wTitle, wClass, rule);
+    
     prevBox = _prevBox;
     titleEntry.set_text(wTitle);
     classEntry.set_text(wClass);
@@ -528,35 +532,25 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
                           std::vector<int>& ruleLineNum)
 {
     Loader loader;
-    int opacityActive = -1;
-    int opacityInactive = -1;
-    std::string posX, posY, sizeX, sizeY;
-    WindowType winType = WindowType::none;
-    bool isPinned = false;
-    bool noInitialFocus = false;
-    bool stayFocused = false;
-    bool noMaxSize = false;
-    if (!loader.LoadFull(ruleLineNum, winType, opacityActive, opacityInactive, posX, posY, sizeX, sizeY, isPinned,
-                         noMaxSize, stayFocused, noInitialFocus, configPath))
+    Rule* rule = new Rule(); 
+    
+    if (!loader.LoadFull(ruleLineNum, rule, configPath))
     {
         FileErrorAlert();
         return;
     }
-    OpenRuleEditor(wTitle, wClass, &ruleSelectBox);
+    
+    OpenRuleEditor(wTitle, wClass, &ruleSelectBox,rule);
+    config.SetLines(ruleLineNum);
 
-    activeOpacity.set_value(opacityActive);
-    inactiveOpacity.set_value(opacityInactive);
-    if (opacityActive != -1)
-    {
+    activeOpacity.set_value(rule->opacityActive);
+    inactiveOpacity.set_value(rule->opacityInactive);
+    if (rule->opacityActive != -1)
         modifyOpacity.set_active(true);
-        config.ChangeOpacity(activeOpacity.get_value_as_int(), inactiveOpacity.get_value_as_int());
-    }
-    else
-    {
+    else  
         modifyOpacity.set_active(false);
-    }
 
-    switch (winType)
+    switch (rule->winType)
     {
     case WindowType::floating:
         floating.set_active(true);
@@ -574,27 +568,23 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
         noType.set_active(true);
         break;
     };
-    config.ChangeWindowType(winType);
-    config.SetLines(ruleLineNum);
 
     dropdownT.set_selected(static_cast<int>(rTitle));
     config.ChangeWinRegEx(rTitle);
     dropdownC.set_selected(static_cast<int>(rClass));
     config.ChangeClsRegEx(rClass);
-    posXEntry.set_text(posX);
-    posYEntry.set_text(posY);
-    sizeXEntry.set_text(sizeX);
-    sizeYEntry.set_text(sizeY);
+    posXEntry.set_text(rule->posX);
+    posYEntry.set_text(rule->posY);
+    sizeXEntry.set_text(rule->sizeX);
+    sizeYEntry.set_text(rule->sizeY);
 
-    pinned.set_active(isPinned);
-    config.ChangePinned(isPinned);
-
-    noInitialFocusCB.set_active(noInitialFocus);
-    config.ChangeNoInitialFocus(noInitialFocus);
-    noMaxSizeCB.set_active(noMaxSize);
-    config.ChangeNoMaxSize(noMaxSize);
-    stayFocusedCB.set_active(stayFocused);
-    config.ChangeStayFocused(stayFocused);
+    pinned.set_active(rule->isPinned);
+    noInitialFocusCB.set_active(rule->noInitialFocus);
+    
+    noMaxSizeCB.set_active(rule->noMaxSize);
+    
+    stayFocusedCB.set_active(rule->stayFocused);
+    
 }
 
 void MainWindow::DeleteRule(std::vector<int>& ruleLineNum)
