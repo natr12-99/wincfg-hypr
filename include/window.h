@@ -14,7 +14,7 @@
 #include "include/ruleconfig.h"
 #include <string>
 #include <vector>
-
+struct Rule; 
 class MainWindow : public Gtk::Window
 {
   public:
@@ -30,7 +30,7 @@ class MainWindow : public Gtk::Window
     void SetSize();
     void SetPos();
     void InitRuleEditor();
-    void OpenRuleEditor(std::string wTitle, std::string wClass, Gtk::Box* _prevBox);
+    void OpenRuleEditor(std::string wTitle, std::string wClass, Gtk::Box* _prevBox, Rule* rule);
     void ResetRuleEditor();
     void LoadRule(std::string wTitle, RegexType rTitle, std::string wClass, RegexType rClass,
                   std::vector<int>& ruleLineNum);

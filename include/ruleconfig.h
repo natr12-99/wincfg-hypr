@@ -7,18 +7,18 @@
 class RuleConfig
 {
   public:
-    void InitRule(std::string wName, std::string wClass);
-    void SetLines(std::vector<int>& lines);
+    void InitRule(std::string wName, std::string wClass, Rule* rul);
+    void SetLines(std::vector<int>& lines){rule->lineNum = lines;}
     void ChangeRuleStr(std::string strC, std::string strN);
-    void ChangeWinRegEx(RegexType type);
-    void ChangeClsRegEx(RegexType type);
+    void ChangeWinRegEx(RegexType type){rule->win = type;}
+    void ChangeClsRegEx(RegexType type){rule->cls = type;}
     void ChangeOpacity(float active, float inactive);
-    void ChangeWindowType(WindowType type);
+    void ChangeWindowType(WindowType type){rule->winType = type;}
     void ChangeSize(std::string x, std::string y);
     void RefreshRulesList();
     void ChangePos(std::string x, std::string y);
     bool Save(std::string path);
-    void ChangePinned(bool isPinned);
+    void ChangePinned(bool isPinned){rule->isPinned = isPinned;}
     void ChangeStayFocused(bool stayFocused)
     {
         rule->stayFocused = stayFocused;
