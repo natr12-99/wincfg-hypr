@@ -16,25 +16,12 @@ bool Saver::SaveStruct(Rule* rule, std::string path)
         if (!DeleteStrings(rule->lineNum, content, path))
             return false;
 
-        std::string winTypeStr, opacityStr, posStr, sizeStr, pinStr, noMaxSizeStr, stayFocusedStr, noInitialFocusStr;
-        GetStrings(rule, winTypeStr, opacityStr, posStr, sizeStr, pinStr, noMaxSizeStr, stayFocusedStr,
-                   noInitialFocusStr);
+        std::vector<std::string> strings;
+        GetStrings(rule, strings);
         int lineCount = rule->lineNum.back();
         rule->lineNum.clear();
-        strToVector(winTypeStr, content, lineCount, rule);
-
-        strToVector(opacityStr, content, lineCount, rule);
-
-        strToVector(posStr, content, lineCount, rule);
-
-        strToVector(sizeStr, content, lineCount, rule);
-
-        strToVector(pinStr, content, lineCount, rule);
-
-        strToVector(noMaxSizeStr, content, lineCount, rule);
-
-        strToVector(stayFocusedStr, content, lineCount, rule);
-        strToVector(noInitialFocusStr, content, lineCount, rule);
+        for (auto str : strings)
+        strToVector(str, content, lineCount, rule);
 
         std::ofstream outfile(path);
         for (auto str : content)
@@ -55,27 +42,13 @@ bool Saver::SaveStruct(Rule* rule, std::string path)
         lineCounter.close();
 
         std::ofstream file(path, std::ios::app);
-
-        std::string winTypeStr, opacityStr, posStr, sizeStr, pinStr, noMaxSizeStr, stayFocusedStr, noInitialFocusStr;
-        GetStrings(rule, winTypeStr, opacityStr, posStr, sizeStr, pinStr, noMaxSizeStr, stayFocusedStr,
-                   noInitialFocusStr);
+        std::vector<std::string> strings;
+        GetStrings(rule, strings);
 
         std::vector<int> lineNum;
-
-        appendToFile(winTypeStr, file, lineNum, lineCount);
-
-        appendToFile(opacityStr, file, lineNum, lineCount);
-
-        appendToFile(posStr, file, lineNum, lineCount);
-
-        appendToFile(sizeStr, file, lineNum, lineCount);
-
-        appendToFile(pinStr, file, lineNum, lineCount);
-
-        appendToFile(noMaxSizeStr, file, lineNum, lineCount);
-
-        appendToFile(stayFocusedStr, file, lineNum, lineCount);
-        appendToFile(noInitialFocusStr, file, lineNum, lineCount);
+        
+        for (auto str : strings)
+        appendToFile(str, file, lineNum, lineCount);
 
         rule->lineNum = lineNum;
 
@@ -119,9 +92,7 @@ bool Saver::DeleteStrings(std::vector<int>& ruleLineNum, std::vector<std::string
     return true;
 }
 
-void Saver::GetStrings(Rule* rule, std::string& winTypeStr, std::string& opacityStr, std::string& posStr,
-                       std::string& sizeStr, std::string& pinStr, std::string& noMaxSizeStr,
-                       std::string& stayFocusedStr, std::string& noInitialFocusStr)
+void Saver::GetStrings(Rule* rule,std::vector<std::string>& strings)
 {
     std::string ruleCondition;
     std::string ruleStart = "windowrule = ";
@@ -182,46 +153,46 @@ void Saver::GetStrings(Rule* rule, std::string& winTypeStr, std::string& opacity
     switch (rule->winType)
     {
     case WindowType::floating:
-        winTypeStr = ruleStart + "float," + ruleCondition;
+        strings.push_back(ruleStart + "float," + ruleCondition);
         break;
     case WindowType::fullscreen:
-        winTypeStr = ruleStart + "fullscreen," + ruleCondition;
+        strings.push_back(ruleStart + "fullscreen," + ruleCondition);
         break;
     case WindowType::tile:
-        winTypeStr = ruleStart + "tile," + ruleCondition;
+        strings.push_back(ruleStart + "tile," + ruleCondition);
         break;
     case WindowType::maximize:
-        winTypeStr = ruleStart + "maximize," + ruleCondition;
+        strings.push_back(ruleStart + "maximize," + ruleCondition);
         break;
     };
 
     if (rule->opacityActive != -1)
     {
-        opacityStr = ruleStart + "opacity " + ToString(rule->opacityActive) + " " + ToString(rule->opacityInactive) +
-                     "," + ruleCondition;
+        strings.push_back(ruleStart + "opacity " + ToString(rule->opacityActive) + " " + ToString(rule->opacityInactive) +
+                     "," + ruleCondition);
     }
 
     if (!rule->posX.empty() || !rule->posY.empty())
     {
-        posStr = ruleStart + "move " + rule->posX + " " + rule->posY + "," + ruleCondition;
+        strings.push_back(ruleStart + "move " + rule->posX + " " + rule->posY + "," + ruleCondition);
     }
 
     if (!rule->sizeX.empty() || !rule->sizeY.empty())
     {
-        sizeStr = ruleStart + "size " + rule->sizeX + " " + rule->sizeY + "," + ruleCondition;
+        strings.push_back(ruleStart + "size " + rule->sizeX + " " + rule->sizeY + "," + ruleCondition);
     }
 
     if (rule->isPinned)
-        pinStr = ruleStart + "pin," + ruleCondition;
+        strings.push_back(ruleStart + "pin," + ruleCondition);
 
     if (rule->noMaxSize)
-        noMaxSizeStr = ruleStart + "nomaxsize," + ruleCondition;
+        strings.push_back(ruleStart + "nomaxsize," + ruleCondition);
 
     if (rule->stayFocused)
-        stayFocusedStr = ruleStart + "stayfocused," + ruleCondition;
+        strings.push_back(ruleStart + "stayfocused," + ruleCondition);
 
     if (rule->noInitialFocus)
-        noInitialFocusStr = ruleStart + "noinitialfocus," + ruleCondition;
+        strings.push_back(ruleStart + "noinitialfocus," + ruleCondition);
 }
 
 std::string Saver::ToString(float value)
