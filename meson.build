@@ -1,6 +1,7 @@
-project('wincfg', 'cpp', version: '1😎', default_options: ['cpp_std=c++20'])
+project('wincfg', 'cpp', version: 'two', default_options: ['cpp_std=c++20'])
 
-gtkmm_dep = dependency('gtkmm-4.0')
+gtkmm = dependency('gtkmm-4.0', required: true)
+json = dependency('nlohmann_json', required: true)
 
 sources = files(
   'src/firstlaunch.cpp',
@@ -12,4 +13,4 @@ sources = files(
   'src/window.cpp',
 )
 
-executable('wincfg', sources, dependencies: gtkmm_dep)
+executable('wincfg', sources,dependencies:[gtkmm,json])

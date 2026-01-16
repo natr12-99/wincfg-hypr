@@ -12,7 +12,7 @@
 #include "gtkmm/stringlist.h"
 #include "include/firstlaunch.h"
 #include "include/func.h"
-#include "include/json.hpp"
+#include <nlohmann/json.hpp>
 #include "include/loader.h"
 #include "include/rule.h"
 #include "include/regextype.h"
@@ -464,15 +464,15 @@ void MainWindow::InitRuleEditor()
     // все остальное
 
     noInitialFocusCB.set_label("Disable initial focus");
-    noInitialFocusCB.set_tooltip_text("Disables the initial focus to the window"); 
+    noInitialFocusCB.set_tooltip_text("Disables the initial focus to the window");
     noInitialFocusCB.signal_toggled().connect([this]() { config.ChangeNoInitialFocus(noInitialFocusCB.get_active()); });
     editRuleBox.append(noInitialFocusCB);
     stayFocusedCB.set_label("Always focused");
-    stayFocusedCB.set_tooltip_text("Forces focus on the window as long as it’s visible."); 
+    stayFocusedCB.set_tooltip_text("Forces focus on the window as long as it’s visible.");
     stayFocusedCB.signal_toggled().connect([this]() { config.ChangeStayFocused(stayFocusedCB.get_active()); });
     editRuleBox.append(stayFocusedCB);
     noMaxSizeCB.set_label("Remove size limitations");
-    noMaxSizeCB.set_tooltip_text("Removes max size limitations. Especially useful with windows that report invalid max sizes (e.g. winecfg)."); 
+    noMaxSizeCB.set_tooltip_text("Removes max size limitations. Especially useful with windows that report invalid max sizes (e.g. winecfg).");
     noMaxSizeCB.signal_toggled().connect([this]() { config.ChangeNoMaxSize(noMaxSizeCB.get_active()); });
     editRuleBox.append(noMaxSizeCB);
 
@@ -504,9 +504,9 @@ void MainWindow::OpenRuleEditor(std::string wTitle, std::string wClass, Box* _pr
 {
     if (rule == nullptr)
     rule = new Rule();
- 
+
     config.InitRule(wTitle, wClass, rule);
-    
+
     prevBox = _prevBox;
     titleEntry.set_text(wTitle);
     classEntry.set_text(wClass);
@@ -532,14 +532,14 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
                           std::vector<int>& ruleLineNum)
 {
     Loader loader;
-    Rule* rule = new Rule(); 
-    
+    Rule* rule = new Rule();
+
     if (!loader.LoadFull(ruleLineNum, rule, configPath))
     {
         FileErrorAlert();
         return;
     }
-    
+
     OpenRuleEditor(wTitle, wClass, &ruleSelectBox,rule);
     config.SetLines(ruleLineNum);
 
@@ -547,7 +547,7 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
     inactiveOpacity.set_value(rule->opacityInactive);
     if (rule->opacityActive != -1)
         modifyOpacity.set_active(true);
-    else  
+    else
         modifyOpacity.set_active(false);
 
     switch (rule->winType)
@@ -580,11 +580,11 @@ void MainWindow::LoadRule(std::string wTitle, RegexType rTitle, std::string wCla
 
     pinned.set_active(rule->isPinned);
     noInitialFocusCB.set_active(rule->noInitialFocus);
-    
+
     noMaxSizeCB.set_active(rule->noMaxSize);
-    
+
     stayFocusedCB.set_active(rule->stayFocused);
-    
+
 }
 
 void MainWindow::DeleteRule(std::vector<int>& ruleLineNum)
