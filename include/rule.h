@@ -1,33 +1,12 @@
 #pragma once
 
-#include "include/windowtype.h"
-#include "regextype.h"
-#include "string"
 #include "vector"
+#include <string>
+#include <unordered_map>
 
-struct Rule
-{
-    std::string windowName;
-    RegexType win = RegexType::nouse;
+struct Rule {
+  std::pmr::unordered_map<std::string, std::string> effects;
+  std::pmr::unordered_map<std::string, std::string> props;
 
-    std::string windowClass;
-    RegexType cls = RegexType::nouse;
-
-    WindowType winType = WindowType::none;
-    float opacityActive = -1;
-    float opacityInactive = -1;
-
-    std::string posX;
-    std::string posY;
-
-    std::string sizeX;
-    std::string sizeY;
-
-    bool isPinned;
-
-    bool noInitialFocus;
-    bool stayFocused;
-    bool noMaxSize;
-
-    std::vector<int> lineNum;
+  std::vector<int> lineNum;
 };
