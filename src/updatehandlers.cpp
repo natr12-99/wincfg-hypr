@@ -1,17 +1,19 @@
 #include "include/updatehandlers.h"
+#include "gtkmm/entry.h"
 #include "include/regextype.h"
 #include "include/windowtype.h"
 #include <format>
 #include <string>
 
-void HadleTwoFieldsUpdate(std::string keyword, std::string firstStr,
-                          std::string secondStr) {
-  config.SetEffectsString(keyword, firstStr + " " + secondStr);
+void HadleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
+                          Gtk::Entry *secondEntry) {
+  config.SetEffectsString(keyword, firstEntry->get_text() + " " +
+                                       secondEntry->get_text());
 }
 
 void HandleCheckButtonUpdate(std::string keyword, bool isEnabled) {
   if (isEnabled)
-    config.SetEffectsString(keyword, "");
+    config.SetEffectsString(keyword, "1");
   else
     config.RemoveEffect(keyword);
 }
@@ -45,25 +47,25 @@ void HandleRegExProps(std::string keyword, Gtk::Entry *entry,
 void HandleWindowTypeUpdae(WindowType type) {
   switch (type) {
   case WindowType::floating:
-    config.SetEffectsString("float", "");
+    config.SetEffectsString("float", "1");
     config.RemoveEffect("fullscreen");
     config.RemoveEffect("tile");
     config.RemoveEffect("maximize");
     break;
   case WindowType::fullscreen:
-    config.SetEffectsString("fullscreen", "");
+    config.SetEffectsString("fullscreen", "1");
     config.RemoveEffect("float");
     config.RemoveEffect("tile");
     config.RemoveEffect("maximize");
     break;
   case WindowType::tile:
-    config.SetEffectsString("tile", "");
+    config.SetEffectsString("tile", "1");
     config.RemoveEffect("float");
     config.RemoveEffect("fullscreen");
     config.RemoveEffect("maximize");
     break;
   case WindowType::maximize:
-    config.SetEffectsString("maximize", "");
+    config.SetEffectsString("maximize", "1");
     config.RemoveEffect("float");
     config.RemoveEffect("tile");
     config.RemoveEffect("fullscreen");

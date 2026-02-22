@@ -184,7 +184,7 @@ void MainWindow::RefreshRulesList() {
   std::vector<std::string> winClasses;
   std::vector<RegexType> RClasses;
   std::vector<std::vector<int>> lineNum;
-  if (!loader.LoadOnlyNames(winNames, RNames, winClasses, RClasses, lineNum,
+  if (!loader.LoadOnlyProps(winNames, RNames, winClasses, RClasses, lineNum,
                             configPath)) {
     FileErrorAlert();
     return;
@@ -229,46 +229,6 @@ void MainWindow::RefreshRulesList() {
   }
 }
 
-void MainWindow::SetRuleStrings(Entry *t, Entry *c) {
-  config.ChangeRuleStr(c->get_text(), t->get_text());
-}
-void MainWindow::SetRegex() {
-  config.ChangeClsRegEx(static_cast<RegexType>(dropdownC.get_selected()));
-  config.ChangeWinRegEx(static_cast<RegexType>(dropdownT.get_selected()));
-}
-void MainWindow::SetOpacity(SpinButton *active, SpinButton *inactive,
-                            Scale *scale, bool activeToScale) {
-  if (modifyOpacity.get_active())
-    config.ChangeOpacity(active->get_value_as_int(),
-                         inactive->get_value_as_int());
-
-  scale->freeze_notify();
-  if (activeToScale)
-    scale->set_value(active->get_value_as_int());
-  else
-    scale->set_value(inactive->get_value_as_int());
-  scale->thaw_notify();
-}
-
-void MainWindow::SetSize() {
-  config.ChangeSize(sizeXEntry.get_text(), sizeYEntry.get_text());
-}
-
-void MainWindow::SetPos() {
-  config.ChangePos(posXEntry.get_text(), posYEntry.get_text());
-}
-
-void MainWindow::SetModifyOpacity() {
-  if (!modifyOpacity.get_active()) {
-    opacityBox.set_sensitive(false);
-    config.ChangeOpacity(-1, -1);
-  } else {
-    opacityBox.set_sensitive(true);
-    config.ChangeOpacity(activeOpacity.get_value_as_int(),
-                         inactiveOpacity.get_value_as_int());
-  }
-}
-
 void MainWindow::InitRuleEditor() {
   mainEditRuleBox.set_orientation(Orientation::VERTICAL);
   Label titleLabel;
@@ -299,7 +259,7 @@ void MainWindow::InitRuleEditor() {
                                         "Contain Left", "Contain Right"});
   dropdownT.set_model(stringList);
   dropdownT.property_selected().signal_changed().connect(
-      sigc::mem_fun(*this, &MainWindow::SetRegex));
+      [this]() { HandleRegExProps("tittle", &titleEntry, &dropdownT); });
   dropdownT.set_tooltip_markup(tooltipS);
   dropdownT.set_margin_top(2);
   editRuleBox.append(dropdownT);
@@ -314,28 +274,20 @@ void MainWindow::InitRuleEditor() {
 
   dropdownC.set_model(stringList);
   dropdownC.property_selected().signal_changed().connect(
-      sigc::mem_fun(*this, &MainWindow::SetRegex));
+      [this]() { HandleRegExProps("class", &classEntry, &dropdownC); });
   dropdownC.set_tooltip_markup(tooltipS);
   dropdownC.set_margin_top(2);
   editRuleBox.append(dropdownC);
 
   titleEntry.signal_changed().connect(
-      sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &titleEntry,
-                 &classEntry));
+      [this]() { HandleRegExProps("tittle", &titleEntry, &dropdownT); });
   classEntry.signal_changed().connect(
-      sigc::bind(sigc::mem_fun(*this, &MainWindow::SetRuleStrings), &titleEntry,
-                 &classEntry));
+      [this]() { HandleRegExProps("class", &classEntry, &dropdownC); });
 
   classEntry.set_tooltip_text("Windows with class matching RegEx below");
   titleEntry.set_tooltip_text("Windows with title matching RegEx below");
   // раздел2
-  modifyOpacity.set_label("Modify opacity");
-  editRuleBox.append(modifyOpacity);
-  modifyOpacity.set_active(false);
-  modifyOpacity.signal_toggled().connect(
-      sigc::mem_fun(*this, &MainWindow::SetModifyOpacity));
-  opacityBox.set_orientation(Orientation::VERTICAL);
-  opacityBox.set_sensitive(false);
+
   // прозрачность
   Box activeOpBox;
   activeOpBox.set_margin(4);
@@ -351,7 +303,6 @@ void MainWindow::InitRuleEditor() {
   activeOpacity.set_increments(1, 10);
   activeOpacity.set_value(100);
   activeOpBox.append(activeOpacity);
-  opacityBox.append(activeOpBox);
 
   // прозрачность
   Box inactiveOpBox;
@@ -368,21 +319,46 @@ void MainWindow::InitRuleEditor() {
   inactiveOpacity.set_increments(1, 10);
   inactiveOpacity.set_value(100);
   inactiveOpBox.append(inactiveOpacity);
-  opacityBox.append(inactiveOpBox);
 
-  editRuleBox.append(opacityBox);
+  Box fullscreenOpBox;
+  inactiveOpBox.set_margin(4);
 
-  activeOpacity.signal_value_changed().connect(
-      (sigc::bind(sigc::mem_fun(*this, &MainWindow::SetOpacity), &activeOpacity,
-                  &inactiveOpacity, &activeOpScale, true)));
+  Label fullL("inactive opacity%");
+  fullscreenOpBox.append(fullL);
+  fullscreenOpScale.set_hexpand(true);
+  fullscreenOpScale.set_range(0, 100);
+  fullscreenOpScale.set_increments(1, 10);
+  fullscreenOpScale.set_value(100);
+  fullscreenOpBox.append(fullscreenOpScale);
+  fullscreenOpacity.set_range(0, 100);
+  fullscreenOpacity.set_increments(1, 10);
+  fullscreenOpacity.set_value(100);
+  fullscreenOpBox.append(fullscreenOpacity);
+
+  editRuleBox.append(activeOpBox);
+  editRuleBox.append(inactiveOpBox);
+  editRuleBox.append(fullscreenOpBox);
+
+  activeOpacity.signal_value_changed().connect([this]() {
+    HandleOpacityUpdate(&activeOpacity, &inactiveOpacity, &fullscreenOpacity,
+                        &activeOpScale, &activeOpacity);
+  });
   activeOpScale.signal_value_changed().connect(
       [this]() { activeOpacity.set_value(activeOpScale.get_value()); });
 
-  inactiveOpacity.signal_value_changed().connect(
-      (sigc::bind(sigc::mem_fun(*this, &MainWindow::SetOpacity), &activeOpacity,
-                  &inactiveOpacity, &inactiveOpScale, false)));
+  inactiveOpacity.signal_value_changed().connect([this]() {
+    HandleOpacityUpdate(&activeOpacity, &inactiveOpacity, &fullscreenOpacity,
+                        &inactiveOpScale, &inactiveOpacity);
+  });
   inactiveOpScale.signal_value_changed().connect(
       [this]() { inactiveOpacity.set_value(inactiveOpScale.get_value()); });
+
+  fullscreenOpacity.signal_value_changed().connect([this]() {
+    HandleOpacityUpdate(&activeOpacity, &inactiveOpacity, &fullscreenOpacity,
+                        &fullscreenOpScale, &fullscreenOpacity);
+  });
+  fullscreenOpScale.signal_value_changed().connect(
+      [this]() { fullscreenOpacity.set_value(fullscreenOpScale.get_value()); });
 
   // тип
 
@@ -395,29 +371,29 @@ void MainWindow::InitRuleEditor() {
   floating.set_label("Floating");
   floating.set_tooltip_text("Floats a window");
   floating.signal_toggled().connect(
-      [this]() { config.ChangeWindowType(WindowType::floating); });
+      []() { HandleWindowTypeUpdae(WindowType::floating); });
   winTypeBox.append(floating);
   tile.set_label("Tile");
   tile.set_tooltip_text("Tiles a window");
   tile.signal_toggled().connect(
-      [this]() { config.ChangeWindowType(WindowType::tile); });
+      []() { HandleWindowTypeUpdae(WindowType::tile); });
   tile.set_group(floating);
   winTypeBox.append(tile);
   fullscreen.set_label("Fullscreen");
   fullscreen.set_tooltip_text("Fullscreens a window");
   fullscreen.signal_toggled().connect(
-      [this]() { config.ChangeWindowType(WindowType::fullscreen); });
+      []() { HandleWindowTypeUpdae(WindowType::fullscreen); });
   winTypeBox.append(fullscreen);
   fullscreen.set_group(floating);
   maximize.set_label("Maximize");
   maximize.set_tooltip_text("Maximizes a window");
   maximize.signal_toggled().connect(
-      [this]() { config.ChangeWindowType(WindowType::maximize); });
+      []() { HandleWindowTypeUpdae(WindowType::maximize); });
   maximize.set_group(floating);
   winTypeBox.append(maximize);
   noType.set_label("Default");
   noType.signal_toggled().connect(
-      [this]() { config.ChangeWindowType(WindowType::none); });
+      []() { HandleWindowTypeUpdae(WindowType::none); });
   noType.set_group(floating);
   winTypeBox.append(noType);
   editRuleBox.append(winTypeBox);
@@ -437,9 +413,9 @@ void MainWindow::InitRuleEditor() {
   sizeBox.append(sizeYEntry);
   editRuleBox.append(sizeBox);
   sizeXEntry.signal_changed().connect(
-      sigc::mem_fun(*this, &MainWindow::SetSize));
+      [this]() { HandleTwoFieldsUpdate("size", &sizeXEntry, &sizeYEntry); });
   sizeYEntry.signal_changed().connect(
-      sigc::mem_fun(*this, &MainWindow::SetSize));
+      [this]() { HandleTwoFieldsUpdate("size", &sizeXEntry, &sizeYEntry); });
   sizeXEntry.set_tooltip_text(
       "Resizes a floating window. Can be int or %, e.g. 1280 or 50%");
   sizeYEntry.set_tooltip_text(
@@ -459,41 +435,15 @@ void MainWindow::InitRuleEditor() {
   posBox.append(pYLabel);
   posBox.append(posYEntry);
   editRuleBox.append(posBox);
-  posXEntry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetPos));
-  posYEntry.signal_changed().connect(sigc::mem_fun(*this, &MainWindow::SetPos));
+  posXEntry.signal_changed().connect(
+      [this]() { HandleTwoFieldsUpdate("move", &posXEntry, &posYEntry); });
+  posYEntry.signal_changed().connect(
+      [this]() { HandleTwoFieldsUpdate("move", &posXEntry, &posYEntry); });
   posXEntry.set_tooltip_text(
       "Moves a floating window. Can be int or %, e.g. 1280 or 50%");
   posYEntry.set_tooltip_text(
       "Moves a floating window. Can be int or %, e.g. 1280 or 50%");
   // закреп
-
-  pinned.set_label("Pin window");
-
-  pinned.set_tooltip_text(
-      "Pins the window (i.e. show it on all workspaces). Note: floating only.");
-  pinned.signal_toggled().connect(
-      [this]() { config.ChangePinned(pinned.get_active()); });
-  editRuleBox.append(pinned);
-  // все остальное
-
-  noInitialFocusCB.set_label("Disable initial focus");
-  noInitialFocusCB.set_tooltip_text("Disables the initial focus to the window");
-  noInitialFocusCB.signal_toggled().connect(
-      [this]() { config.ChangeNoInitialFocus(noInitialFocusCB.get_active()); });
-  editRuleBox.append(noInitialFocusCB);
-  stayFocusedCB.set_label("Always focused");
-  stayFocusedCB.set_tooltip_text(
-      "Forces focus on the window as long as it’s visible.");
-  stayFocusedCB.signal_toggled().connect(
-      [this]() { config.ChangeStayFocused(stayFocusedCB.get_active()); });
-  editRuleBox.append(stayFocusedCB);
-  noMaxSizeCB.set_label("Remove size limitations");
-  noMaxSizeCB.set_tooltip_text(
-      "Removes max size limitations. Especially useful with windows that "
-      "report invalid max sizes (e.g. winecfg).");
-  noMaxSizeCB.signal_toggled().connect(
-      [this]() { config.ChangeNoMaxSize(noMaxSizeCB.get_active()); });
-  editRuleBox.append(noMaxSizeCB);
 
   Box bottomBox;
   Button *exitB = make_managed<Button>("Canel");
@@ -536,7 +486,7 @@ void MainWindow::ResetRuleEditor() {
   dropdownT.set_selected(0);
   dropdownC.set_selected(0);
   noType.set_active(true);
-  modifyOpacity.set_active(false);
+
   activeOpacity.set_value(100);
   inactiveOpacity.set_value(100);
   posXEntry.set_text("");

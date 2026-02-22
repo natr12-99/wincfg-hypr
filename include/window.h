@@ -24,11 +24,7 @@ private:
   void SelectConfigPath();
   void RefreshWindowsList();
   void RefreshRulesList();
-  void SetRuleStrings(Gtk::Entry *t, Gtk::Entry *c);
-  void SetOpacity(Gtk::SpinButton *active, Gtk::SpinButton *inactive,
-                  Gtk::Scale *scale, bool activeToScale);
-  void SetSize();
-  void SetPos();
+
   void InitRuleEditor();
   void OpenRuleEditor(std::string wTitle, std::string wClass,
                       Gtk::Box *_prevBox, Rule *rule);
@@ -37,8 +33,7 @@ private:
                 RegexType rClass, std::vector<int> &ruleLineNum);
   void DeleteRule(std::vector<int> &ruleLineNum);
   void FileErrorAlert();
-  void SetModifyOpacity();
-  void SetRegex();
+
   Gtk::Box windowSelectBox;
   Gtk::ListBox listClients;
   Gtk::Button refreshListButton;
@@ -53,13 +48,12 @@ private:
 
   Gtk::Box *prevBox;
   Gtk::Box mainEditRuleBox;
-  Gtk::Box opacityBox;
   Gtk::Entry titleEntry, classEntry, posXEntry, posYEntry, sizeXEntry,
       sizeYEntry;
-  Gtk::CheckButton floating, fullscreen, tile, maximize, noType, modifyOpacity,
-      pinned, noInitialFocusCB, stayFocusedCB, noMaxSizeCB;
-  Gtk::SpinButton activeOpacity, inactiveOpacity;
-  Gtk::Scale activeOpScale, inactiveOpScale;
+  Gtk::CheckButton floating, fullscreen, tile, maximize, noType, pinned,
+      noInitialFocusCB, stayFocusedCB, noMaxSizeCB;
+  Gtk::SpinButton activeOpacity, inactiveOpacity, fullscreenOpacity;
+  Gtk::Scale activeOpScale, inactiveOpScale, fullscreenOpScale;
   Gtk::Button exitFromEditing;
   Gtk::DropDown dropdownC, dropdownT;
   Gtk::SearchEntry2 rulesListSearch;

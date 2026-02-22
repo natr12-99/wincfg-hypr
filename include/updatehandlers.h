@@ -8,8 +8,8 @@
 
 RuleConfig config;
 
-void HadleTwoFieldsUpdate(std::string keyword, std::string firstStr,
-                          std::string secondStr);
+void HandleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
+                           Gtk::Entry *secondEntry);
 
 void HandleCheckButtonUpdate(std::string keyword, bool isEnabled);
 

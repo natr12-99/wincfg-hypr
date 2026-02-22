@@ -2,8 +2,10 @@
 #include "include/regextype.h"
 #include "include/rule.h"
 #include <algorithm>
+#include <format>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <vector>
 
 bool Saver::SaveStruct(Rule *rule, std::string path) {
@@ -84,52 +86,18 @@ bool Saver::DeleteStrings(std::vector<int> &ruleLineNum,
 }
 
 void Saver::GetStrings(Rule *rule, std::vector<std::string> &strings) {
-  std::string ruleCondition;
+  std::string ruleProps, ruleEffects;
   std::string ruleStart = "windowrule = ";
-  bool nameExist = false;
 
-  switch (rule->winType) {
-  case WindowType::floating:
-    strings.push_back(ruleStart + "float," + ruleCondition);
-    break;
-  case WindowType::fullscreen:
-    strings.push_back(ruleStart + "fullscreen," + ruleCondition);
-    break;
-  case WindowType::tile:
-    strings.push_back(ruleStart + "tile," + ruleCondition);
-    break;
-  case WindowType::maximize:
-    strings.push_back(ruleStart + "maximize," + ruleCondition);
-    break;
-  };
-
-  if (rule->opacityActive != -1) {
-    strings.push_back(ruleStart + "opacity " + ToString(rule->opacityActive) +
-                      " " + ToString(rule->opacityInactive) + "," +
-                      ruleCondition);
+  for (auto i : rule->props) {
+    ruleProps += std::format("match:{} {},", i.first, i.second);
   }
-
-  if (!rule->posX.empty() || !rule->posY.empty()) {
-    strings.push_back(ruleStart + "move " + rule->posX + " " + rule->posY +
-                      "," + ruleCondition);
+  for (auto i : rule->effects) {
+    ruleEffects += std::format("{} {},", i.first, i.second);
   }
-
-  if (!rule->sizeX.empty() || !rule->sizeY.empty()) {
-    strings.push_back(ruleStart + "size " + rule->sizeX + " " + rule->sizeY +
-                      "," + ruleCondition);
-  }
-
-  if (rule->isPinned)
-    strings.push_back(ruleStart + "pin," + ruleCondition);
-
-  if (rule->noMaxSize)
-    strings.push_back(ruleStart + "nomaxsize," + ruleCondition);
-
-  if (rule->stayFocused)
-    strings.push_back(ruleStart + "stayfocused," + ruleCondition);
-
-  if (rule->noInitialFocus)
-    strings.push_back(ruleStart + "noinitialfocus," + ruleCondition);
+  std::string s = ruleStart + ruleProps + ruleEffects;
+  s.pop_back();
+  strings.push_back(s);
 }
 
 std::string Saver::ToString(float value) {
