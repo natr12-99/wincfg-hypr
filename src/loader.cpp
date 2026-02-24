@@ -3,8 +3,12 @@
 #include "include/rule.h"
 #include <fstream>
 #include <regex>
+#include <sstream>
+#include <string>
+#include <vector>
 
 bool Loader::LoadOnlyProps(std::vector<std::string> &winProps,
+                           std::vector<std::string> &rulesStrings,
                            std::vector<std::vector<int>> &lineNum,
                            std::string path) {
   using namespace std;
@@ -15,124 +19,50 @@ bool Loader::LoadOnlyProps(std::vector<std::string> &winProps,
   string input;
   int fileLine = 0;
   while (getline(file, input)) {
-    regex pattern(
-        R"(\s*([^,]+)\s*,\s*([^:]+)\s*:\s*([^,]+)(?:\s*,\s*([^:]+)\s*:\s*([^,]+))?)");
-    smatch matches;
-    if (regex_search(input, matches, pattern)) {
-      if (matches[1].str()[0] == '#') {
-        fileLine++;
-        continue;
-      }
-
-      if (matches[1].str().find("windowrule") == string::npos) {
-        fileLine++;
-        continue;
-      }
-
-      string Wtitle = "";
-      string Wclass = "";
-      RegexType RName = RegexType::nouse;
-      RegexType RClass = RegexType::nouse;
-
-      for (int i = 1; i < matches.size(); i++) {
-        if (matches[i].str().compare("class") == 0) {
-          Wclass = matches[i + 1];
-          RClass = GetRType(Wclass);
-        } else if (matches[i].str().compare("title") == 0) {
-          Wtitle = matches[i + 1];
-          RName = GetRType(Wtitle);
-        }
-      }
-      int index = 0;
-      if (!FindMatches(winNames, winClasses, RNames, RClasses, Wtitle, Wclass,
-                       RName, RClass, index)) {
-        winNames.push_back(Wtitle);
-        winClasses.push_back(Wclass);
-
-        RClasses.push_back(RClass);
-        RNames.push_back(RName);
-        vector<int> vec{fileLine};
-        lineNum.push_back(vec);
-      } else {
-        lineNum.at(index).push_back(fileLine);
-      }
+    if (!isWindowRule(input)) {
+      fileLine++;
+      continue;
     }
+
+    string matches;
+    std::regex matchRegex(R"(match:([^,]+))");
+
+    for (std::sregex_iterator it(input.begin(), input.end(), matchRegex), end;
+         it != end; ++it) {
+      matches += (*it)[1].str();
+    }
+    winProps.push_back(matches);
+    auto t = input.substr(input.find('=') + 1);
+
+    rulesStrings.push_back(t.substr(t.find_first_not_of(' ')));
+    vector<int> vec{fileLine};
+    lineNum.push_back(vec);
     fileLine++;
   }
+
   file.close();
   return true;
 }
 
-bool Loader::LoadFull(std::vector<int> &ruleLineNum, Rule *rule,
-                      std::string path) {
+void Loader::LoadFull(std::string &input, Rule *rule) {
   using namespace std;
-  setlocale(LC_ALL, "C");
 
-  ifstream file(path);
-  if (!file.good())
-    return false;
-  string input;
-  int lineNum = 0;  // номер строки в файле
-  int vecIndex = 0; // номер в векторе
+  int pos = input.find(',');
+  string str = input.substr(0, pos);
 
-  while (getline(file, input) && vecIndex < ruleLineNum.size()) {
-    if (lineNum == ruleLineNum.at(vecIndex)) {
-      int pos = input.find(',');
-      string str = input.substr(0, pos);
-
-      regex pattern(
-          R"(\s*([^=]+)\s*=\s*(\w+)(?:\s+([\d.]+))?(?:\s+([\d.]+))?\s*)");
-      smatch matches;
-      if (regex_search(str, matches, pattern)) {
-        if (matches[2].compare("float") == 0)
-          rule->winType = WindowType::floating;
-        else if (matches[2].compare("tile") == 0)
-          rule->winType = WindowType::tile;
-        else if (matches[2].compare("maximize") == 0)
-          rule->winType = WindowType::maximize;
-        else if (matches[2].compare("fullscreen") == 0)
-          rule->winType = WindowType::fullscreen;
-        else if (matches[2].compare("opacity") == 0) {
-          rule->opacityActive = stof(matches[3]) * 100;
-          if (matches[4].matched)
-            rule->opacityInactive = stof(matches[4]) * 100;
-        } else if (matches[2].compare("move") == 0) {
-          rule->posX = matches[3];
-          if (matches[4].matched)
-            rule->posY = matches[4];
-        } else if (matches[2].compare("size") == 0) {
-          rule->sizeX = matches[3];
-          if (matches[4].matched)
-            rule->sizeY = matches[4];
-        } else if (matches[2].compare("pin") == 0)
-          rule->isPinned = true;
-        else if (matches[2].compare("stayfocused") == 0)
-          rule->stayFocused = true;
-        else if (matches[2].compare("nomaxsize") == 0)
-          rule->noMaxSize = true;
-        else if (matches[2].compare("noinitialfocus") == 0)
-          rule->noInitialFocus = true;
-      }
-      vecIndex++;
-    }
-    lineNum++;
+  bool isMatch = false;
+  if (input.find("match:", 0) == 0) {
+    isMatch = true;
+    input = input.substr(6);
   }
-  return true;
-}
-
-bool Loader::FindMatches(std::vector<std::string> &vec,
-                         std::vector<std::string> &vec2,
-                         std::vector<RegexType> &type1,
-                         std::vector<RegexType> &type2, std::string str,
-                         std::string str2, RegexType tp1, RegexType tp2,
-                         int &index) {
-  for (std::string st : vec) {
-    if ((st.compare(str) == 0) && (vec2.at(index).compare(str2) == 0) &&
-        type1.at(index) == tp1 && type2.at(index) == tp2)
-      return true;
-    index++;
-  }
-  return false;
+  std::stringstream ss(input);
+  std::string prop, args;
+  ss >> prop;
+  std::getline(ss, args);
+  if (isMatch)
+    rule->props[prop] = args;
+  else
+    rule->effects[prop] = args;
 }
 
 RegexType Loader::GetRType(std::string &input) {
@@ -153,4 +83,15 @@ RegexType Loader::GetRType(std::string &input) {
   } else {
     return RegexType::fullMatch;
   }
+}
+
+bool Loader::isWindowRule(const std::string &line) {
+  auto firstNonSpace = line.find_first_not_of(" \t");
+  if (firstNonSpace == std::string::npos)
+    return false;
+
+  if (line[firstNonSpace] == '#')
+    return false;
+
+  return line.find("windowrule =", firstNonSpace) != std::string::npos;
 }

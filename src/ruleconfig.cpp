@@ -2,7 +2,7 @@
 #include "include/rule.h"
 #include "include/saver.h"
 
-void RuleConfig::InitRule(std::string wName, std::string wClass, Rule *rul) {
+void RuleConfig::InitRule(Rule *rul) {
   if (nullptr != rule)
     delete rule;
 

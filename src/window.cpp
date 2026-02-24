@@ -13,9 +13,11 @@
 #include "include/firstlaunch.h"
 #include "include/func.h"
 #include "include/loader.h"
-#include "include/regextype.h"
 #include "include/rule.h"
+#include "include/ruleconfig.h"
+#include "include/rulesparsers.h"
 #include "include/saver.h"
+#include "include/simplerule.h"
 #include "include/updatehandlers.h"
 #include "include/windowtype.h"
 #include "sigc++/adaptors/bind.h"
@@ -45,7 +47,7 @@ MainWindow::MainWindow() {
   newEmtryRuleButton.set_label("New empty rule");
   newEmtryRuleButton.set_margin(5);
   newEmtryRuleButton.signal_clicked().connect([this]() {
-    OpenRuleEditor("", "", &windowSelectBox, nullptr);
+    OpenRuleEditor(&windowSelectBox, nullptr);
     ResetRuleEditor();
   });
   listClients.set_margin(5);
@@ -164,7 +166,8 @@ void MainWindow::RefreshWindowsList() {
     label->set_justify(Gtk::Justification::CENTER);
 
     but->signal_clicked().connect([this, item]() {
-      OpenRuleEditor(item["title"], item["class"], &windowSelectBox, nullptr);
+      OpenRuleEditor(&windowSelectBox, nullptr); // сделать при открытии
+                                                 // клиентов
       ResetRuleEditor();
     });
 
@@ -179,40 +182,26 @@ void MainWindow::RefreshRulesList() {
   }
 
   Loader loader;
-  std::vector<std::string> winNames;
-  std::vector<RegexType> RNames;
-  std::vector<std::string> winClasses;
-  std::vector<RegexType> RClasses;
+  std::vector<std::string> winProps;
+  std::vector<std::string> rulesStrings;
   std::vector<std::vector<int>> lineNum;
-  if (!loader.LoadOnlyProps(winNames, RNames, winClasses, RClasses, lineNum,
-                            configPath)) {
+  if (!loader.LoadOnlyProps(winProps, rulesStrings, lineNum, configPath)) {
     FileErrorAlert();
     return;
   }
 
-  for (int i = 0; i < winNames.size(); i++) {
+  for (int i = 0; i < winProps.size(); i++) {
     ListBoxRow row;
-
-    std::string s_class = winClasses.at(i);
-    if (s_class.empty())
-      s_class = "class: empty";
-    else
-      s_class = "class: " + s_class;
-    std::string s_title = winNames.at(i);
-    if (s_title.empty())
-      s_title = "title: empty";
-    else
-      s_title = "title: " + s_title;
     std::vector<int> ruleLineNum = lineNum.at(i);
 
-    Button *but = make_managed<Button>(s_title + '\n' + s_class);
+    Button *but = make_managed<Button>(winProps.at(i));
     auto label = dynamic_cast<Gtk::Label *>(but->get_child());
     label->set_justify(Gtk::Justification::CENTER);
 
     but->set_hexpand(true);
-    but->signal_clicked().connect(sigc::bind(
-        sigc::mem_fun(*this, &MainWindow::LoadRule), winNames.at(i),
-        RNames.at(i), winClasses.at(i), RClasses.at(i), ruleLineNum));
+    but->signal_clicked().connect(
+        sigc::bind(sigc::mem_fun(*this, &MainWindow::LoadRule),
+                   rulesStrings.at(i), ruleLineNum));
 
     Button *delBut = make_managed<Button>();
     delBut->set_icon_name("edit-delete-symbolic");
@@ -444,6 +433,19 @@ void MainWindow::InitRuleEditor() {
   posYEntry.set_tooltip_text(
       "Moves a floating window. Can be int or %, e.g. 1280 or 50%");
   // закреп
+  for (auto i : simpleRules) {
+    Gtk::CheckButton *cb = make_managed<Gtk::CheckButton>();
+    cb->set_label(i.name);
+    cb->set_tooltip_text(i.tooltipText);
+    cb->signal_toggled().connect(
+        [i, &cb]() { HandleCheckButtonUpdate(i.keyword, cb->get_active()); });
+    editRuleBox.append(*cb);
+    checkButtons[i.keyword] = cb;
+  }
+  checkButtons["float"] = &floating;
+  checkButtons["fullscreen"] = &fullscreen;
+  checkButtons["tile"] = &tile;
+  checkButtons["maximize"] = &maximize; // проверить
 
   Box bottomBox;
   Button *exitB = make_managed<Button>("Canel");
@@ -457,7 +459,7 @@ void MainWindow::InitRuleEditor() {
 
   Button *saveB = make_managed<Button>("Save");
   saveB->signal_clicked().connect([this]() {
-    if (!config.Save(configPath))
+    if (!RuleConfig::Save(configPath))
       FileErrorAlert();
   });
   saveB->set_margin(5);
@@ -469,16 +471,14 @@ void MainWindow::InitRuleEditor() {
   mainEditRuleBox.append(bottomBox);
 }
 
-void MainWindow::OpenRuleEditor(std::string wTitle, std::string wClass,
-                                Box *_prevBox, Rule *rule) {
+void MainWindow::OpenRuleEditor(Box *_prevBox, Rule *rule) {
   if (rule == nullptr)
     rule = new Rule();
 
-  config.InitRule(wTitle, wClass, rule);
+  RuleConfig::InitRule(rule);
 
   prevBox = _prevBox;
-  titleEntry.set_text(wTitle);
-  classEntry.set_text(wClass);
+
   set_child(mainEditRuleBox);
 }
 
@@ -496,60 +496,31 @@ void MainWindow::ResetRuleEditor() {
   pinned.set_active(false);
 }
 
-void MainWindow::LoadRule(std::string wTitle, RegexType rTitle,
-                          std::string wClass, RegexType rClass,
+void MainWindow::LoadRule(std::string ruleString,
                           std::vector<int> &ruleLineNum) {
   Loader loader;
   Rule *rule = new Rule();
 
-  if (!loader.LoadFull(ruleLineNum, rule, configPath)) {
-    FileErrorAlert();
-    return;
+  loader.LoadFull(ruleString, rule);
+
+  OpenRuleEditor(&ruleSelectBox, rule);
+  RuleConfig::SetLines(ruleLineNum);
+  for (auto i : rule->props) {
+    std::string prop = i.first;
+    if (prop == "class") { // все перепроверить короче
+      ParseRegExProps(i.second, &classEntry, &dropdownC);
+    } else if (prop == "title")
+      ParseRegExProps(i.second, &titleEntry, &dropdownT);
   }
-
-  OpenRuleEditor(wTitle, wClass, &ruleSelectBox, rule);
-  config.SetLines(ruleLineNum);
-
-  activeOpacity.set_value(rule->opacityActive);
-  inactiveOpacity.set_value(rule->opacityInactive);
-  if (rule->opacityActive != -1)
-    modifyOpacity.set_active(true);
-  else
-    modifyOpacity.set_active(false);
-
-  switch (rule->winType) {
-  case WindowType::floating:
-    floating.set_active(true);
-    break;
-  case WindowType::fullscreen:
-    fullscreen.set_active(true);
-    break;
-  case WindowType::tile:
-    tile.set_active(true);
-    break;
-  case WindowType::maximize:
-    maximize.set_active(true);
-    break;
-  case WindowType::none:
-    noType.set_active(true);
-    break;
-  };
-
-  dropdownT.set_selected(static_cast<int>(rTitle));
-  config.ChangeWinRegEx(rTitle);
-  dropdownC.set_selected(static_cast<int>(rClass));
-  config.ChangeClsRegEx(rClass);
-  posXEntry.set_text(rule->posX);
-  posYEntry.set_text(rule->posY);
-  sizeXEntry.set_text(rule->sizeX);
-  sizeYEntry.set_text(rule->sizeY);
-
-  pinned.set_active(rule->isPinned);
-  noInitialFocusCB.set_active(rule->noInitialFocus);
-
-  noMaxSizeCB.set_active(rule->noMaxSize);
-
-  stayFocusedCB.set_active(rule->stayFocused);
+  for (auto i : rule->effects) {
+    std::string prop = i.first;
+    if (checkButtons.contains(prop))
+      checkButtons[prop]->set_active(true);
+    else if (prop == "size")
+      ParseTwoFields(i.second, &sizeXEntry, &sizeYEntry);
+    else if (prop == "pos")
+      ParseTwoFields(i.second, &posXEntry, &posYEntry);
+  }
 }
 
 void MainWindow::DeleteRule(std::vector<int> &ruleLineNum) {

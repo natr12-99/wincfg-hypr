@@ -1,12 +1,11 @@
+#pragma once
+
 #include "gtkmm/dropdown.h"
 #include "gtkmm/entry.h"
 #include "gtkmm/scale.h"
 #include "gtkmm/spinbutton.h"
-#include "include/ruleconfig.h"
 #include "include/windowtype.h"
 #include <string>
-
-RuleConfig config;
 
 void HandleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
                            Gtk::Entry *secondEntry);

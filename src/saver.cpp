@@ -1,10 +1,9 @@
 #include "include/saver.h"
-#include "include/regextype.h"
+
 #include "include/rule.h"
 #include <algorithm>
 #include <format>
 #include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -100,12 +99,6 @@ void Saver::GetStrings(Rule *rule, std::vector<std::string> &strings) {
   strings.push_back(s);
 }
 
-std::string Saver::ToString(float value) {
-  std::stringstream s;
-  s.imbue(std::locale("C"));
-  s << value;
-  return s.str();
-}
 void Saver::strToVector(std::string &str, std::vector<std::string> &content,
                         int &lineCount, Rule *rule) {
   if (!str.empty()) {

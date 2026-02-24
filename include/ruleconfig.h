@@ -6,16 +6,16 @@
 
 class RuleConfig {
 public:
-  void InitRule(std::string wName, std::string wClass, Rule *rul);
-  void SetLines(std::vector<int> &lines) { rule->lineNum = lines; }
-  bool Save(std::string path);
+  static void InitRule(Rule *rul);
+  static void SetLines(std::vector<int> &lines) { rule->lineNum = lines; }
+  static bool Save(std::string path);
 
-  void SetEffectsString(std::string keyword, std::string str);
-  void SetPropsString(std::string keyword, std::string str);
+  static void SetEffectsString(std::string keyword, std::string str);
+  static void SetPropsString(std::string keyword, std::string str);
 
-  void RemoveProp(std::string key);
-  void RemoveEffect(std::string key);
+  static void RemoveProp(std::string key);
+  static void RemoveEffect(std::string key);
 
 private:
-  Rule *rule = nullptr;
+  inline static Rule *rule = nullptr;
 };

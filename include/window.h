@@ -10,9 +10,10 @@
 #include "gtkmm/searchentry2.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/window.h"
-#include "include/regextype.h"
 #include "include/ruleconfig.h"
+
 #include <string>
+#include <unordered_map>
 #include <vector>
 struct Rule;
 class MainWindow : public Gtk::Window {
@@ -26,11 +27,9 @@ private:
   void RefreshRulesList();
 
   void InitRuleEditor();
-  void OpenRuleEditor(std::string wTitle, std::string wClass,
-                      Gtk::Box *_prevBox, Rule *rule);
+  void OpenRuleEditor(Gtk::Box *_prevBox, Rule *rule);
   void ResetRuleEditor();
-  void LoadRule(std::string wTitle, RegexType rTitle, std::string wClass,
-                RegexType rClass, std::vector<int> &ruleLineNum);
+  void LoadRule(std::string ruleString, std::vector<int> &ruleLineNum);
   void DeleteRule(std::vector<int> &ruleLineNum);
   void FileErrorAlert();
 
@@ -57,7 +56,7 @@ private:
   Gtk::Button exitFromEditing;
   Gtk::DropDown dropdownC, dropdownT;
   Gtk::SearchEntry2 rulesListSearch;
-
+  std::pmr::unordered_map<std::string, Gtk::CheckButton *> checkButtons;
   std::string configPath;
 
   Glib::RefPtr<Gio::Settings> settings;

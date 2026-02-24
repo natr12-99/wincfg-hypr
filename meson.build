@@ -9,8 +9,10 @@ sources = files(
   'src/loader.cpp',
   'src/main.cpp',
   'src/ruleconfig.cpp',
+  'src/rulesparsers.cpp',
   'src/saver.cpp',
+  'src/updatehandlers.cpp',
   'src/window.cpp',
 )
 
-executable('wincfg', sources,dependencies:[gtkmm,json])
+executable('wincfg', sources, dependencies: [gtkmm, json])

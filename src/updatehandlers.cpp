@@ -1,21 +1,22 @@
 #include "include/updatehandlers.h"
 #include "gtkmm/entry.h"
 #include "include/regextype.h"
+#include "include/ruleconfig.h"
 #include "include/windowtype.h"
 #include <format>
 #include <string>
 
-void HadleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
-                          Gtk::Entry *secondEntry) {
-  config.SetEffectsString(keyword, firstEntry->get_text() + " " +
-                                       secondEntry->get_text());
+void HandleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
+                           Gtk::Entry *secondEntry) {
+  RuleConfig::SetEffectsString(keyword, firstEntry->get_text() + " " +
+                                            secondEntry->get_text());
 }
 
 void HandleCheckButtonUpdate(std::string keyword, bool isEnabled) {
   if (isEnabled)
-    config.SetEffectsString(keyword, "1");
+    RuleConfig::SetEffectsString(keyword, "1");
   else
-    config.RemoveEffect(keyword);
+    RuleConfig::RemoveEffect(keyword);
 }
 
 void HandleRegExProps(std::string keyword, Gtk::Entry *entry,
@@ -38,43 +39,43 @@ void HandleRegExProps(std::string keyword, Gtk::Entry *entry,
       prop = "" + data + ".*";
       break;
     }
-    config.SetPropsString(keyword, prop);
+    RuleConfig::SetPropsString(keyword, prop);
   } else {
-    config.RemoveProp(keyword);
+    RuleConfig::RemoveProp(keyword);
   }
 }
 
 void HandleWindowTypeUpdae(WindowType type) {
   switch (type) {
   case WindowType::floating:
-    config.SetEffectsString("float", "1");
-    config.RemoveEffect("fullscreen");
-    config.RemoveEffect("tile");
-    config.RemoveEffect("maximize");
+    RuleConfig::SetEffectsString("float", "1");
+    RuleConfig::RemoveEffect("fullscreen");
+    RuleConfig::RemoveEffect("tile");
+    RuleConfig::RemoveEffect("maximize");
     break;
   case WindowType::fullscreen:
-    config.SetEffectsString("fullscreen", "1");
-    config.RemoveEffect("float");
-    config.RemoveEffect("tile");
-    config.RemoveEffect("maximize");
+    RuleConfig::SetEffectsString("fullscreen", "1");
+    RuleConfig::RemoveEffect("float");
+    RuleConfig::RemoveEffect("tile");
+    RuleConfig::RemoveEffect("maximize");
     break;
   case WindowType::tile:
-    config.SetEffectsString("tile", "1");
-    config.RemoveEffect("float");
-    config.RemoveEffect("fullscreen");
-    config.RemoveEffect("maximize");
+    RuleConfig::SetEffectsString("tile", "1");
+    RuleConfig::RemoveEffect("float");
+    RuleConfig::RemoveEffect("fullscreen");
+    RuleConfig::RemoveEffect("maximize");
     break;
   case WindowType::maximize:
-    config.SetEffectsString("maximize", "1");
-    config.RemoveEffect("float");
-    config.RemoveEffect("tile");
-    config.RemoveEffect("fullscreen");
+    RuleConfig::SetEffectsString("maximize", "1");
+    RuleConfig::RemoveEffect("float");
+    RuleConfig::RemoveEffect("tile");
+    RuleConfig::RemoveEffect("fullscreen");
     break;
   case WindowType::none:
-    config.RemoveEffect("maximize");
-    config.RemoveEffect("float");
-    config.RemoveEffect("tile");
-    config.RemoveEffect("fullscreen");
+    RuleConfig::RemoveEffect("maximize");
+    RuleConfig::RemoveEffect("float");
+    RuleConfig::RemoveEffect("tile");
+    RuleConfig::RemoveEffect("fullscreen");
   }
 }
 
@@ -85,11 +86,12 @@ void HandleOpacityUpdate(Gtk::SpinButton *activeSB, Gtk::SpinButton *inactiveSB,
   float inactive = inactiveSB->get_value() / 100;
   float fullscreen = fullscreenSB->get_value() / 100;
   if (active == inactive && inactive == fullscreen)
-    config.SetEffectsString("opacity", std::to_string(active));
+    RuleConfig::SetEffectsString("opacity", std::to_string(active));
   else if (fullscreen == 1)
-    config.SetEffectsString("opacity", std::format("{} {}", active, inactive));
+    RuleConfig::SetEffectsString("opacity",
+                                 std::format("{} {}", active, inactive));
   else
-    config.SetEffectsString(
+    RuleConfig::SetEffectsString(
         "opacity", std::format("{} {} {}", active, inactive, fullscreen));
 
   scale->freeze_notify();
