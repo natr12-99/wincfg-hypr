@@ -3,6 +3,7 @@
 #include "glib.h"
 #include "gtkmm/alertdialog.h"
 #include "gtkmm/button.h"
+#include "gtkmm/checkbutton.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/filedialog.h"
 #include "gtkmm/label.h"
@@ -22,6 +23,7 @@
 #include "include/windowtype.h"
 #include "sigc++/adaptors/bind.h"
 #include "sigc++/functors/mem_fun.h"
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -167,7 +169,7 @@ void MainWindow::RefreshWindowsList() {
 
     but->signal_clicked().connect([this, item]() {
       OpenRuleEditor(&windowSelectBox, nullptr); // сделать при открытии
-                                                 // клиентов
+                                                 // клиентов (при создании)
       ResetRuleEditor();
     });
 
@@ -248,7 +250,7 @@ void MainWindow::InitRuleEditor() {
                                         "Contain Left", "Contain Right"});
   dropdownT.set_model(stringList);
   dropdownT.property_selected().signal_changed().connect(
-      [this]() { HandleRegExProps("tittle", &titleEntry, &dropdownT); });
+      [this]() { HandleRegExProps("title", &titleEntry, &dropdownT); });
   dropdownT.set_tooltip_markup(tooltipS);
   dropdownT.set_margin_top(2);
   editRuleBox.append(dropdownT);
@@ -269,7 +271,7 @@ void MainWindow::InitRuleEditor() {
   editRuleBox.append(dropdownC);
 
   titleEntry.signal_changed().connect(
-      [this]() { HandleRegExProps("tittle", &titleEntry, &dropdownT); });
+      [this]() { HandleRegExProps("title", &titleEntry, &dropdownT); });
   classEntry.signal_changed().connect(
       [this]() { HandleRegExProps("class", &classEntry, &dropdownC); });
 
@@ -434,11 +436,12 @@ void MainWindow::InitRuleEditor() {
       "Moves a floating window. Can be int or %, e.g. 1280 or 50%");
   // закреп
   for (auto i : simpleRules) {
-    Gtk::CheckButton *cb = make_managed<Gtk::CheckButton>();
+    Gtk::CheckButton *cb =
+        new Gtk::CheckButton(); // make_managed<Gtk::CheckButton>();
     cb->set_label(i.name);
     cb->set_tooltip_text(i.tooltipText);
     cb->signal_toggled().connect(
-        [i, &cb]() { HandleCheckButtonUpdate(i.keyword, cb->get_active()); });
+        [i, cb]() { HandleCheckButtonUpdate(i.keyword, cb); });
     editRuleBox.append(*cb);
     checkButtons[i.keyword] = cb;
   }
@@ -507,6 +510,7 @@ void MainWindow::LoadRule(std::string ruleString,
   RuleConfig::SetLines(ruleLineNum);
   for (auto i : rule->props) {
     std::string prop = i.first;
+    std::cout << prop << " " << i.second << "пропы\n";
     if (prop == "class") { // все перепроверить короче
       ParseRegExProps(i.second, &classEntry, &dropdownC);
     } else if (prop == "title")
@@ -514,6 +518,7 @@ void MainWindow::LoadRule(std::string ruleString,
   }
   for (auto i : rule->effects) {
     std::string prop = i.first;
+    std::cout << prop << " " << i.second << "эффекты\n";
     if (checkButtons.contains(prop))
       checkButtons[prop]->set_active(true);
     else if (prop == "size")

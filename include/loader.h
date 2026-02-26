@@ -11,7 +11,7 @@ public:
                      std::vector<std::string> &rulesStrings,
                      std::vector<std::vector<int>> &lineNum, std::string path);
 
-  void LoadFull(std::string &input, Rule *rule);
+  void LoadFull(std::string input, Rule *rule);
 
 private:
   RegexType GetRType(std::string &input);

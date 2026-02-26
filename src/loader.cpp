@@ -25,9 +25,9 @@ bool Loader::LoadOnlyProps(std::vector<std::string> &winProps,
     }
 
     string matches;
-    std::regex matchRegex(R"(match:([^,]+))");
+    regex matchRegex(R"(match:([^,]+))");
 
-    for (std::sregex_iterator it(input.begin(), input.end(), matchRegex), end;
+    for (sregex_iterator it(input.begin(), input.end(), matchRegex), end;
          it != end; ++it) {
       matches += (*it)[1].str();
     }
@@ -44,25 +44,35 @@ bool Loader::LoadOnlyProps(std::vector<std::string> &winProps,
   return true;
 }
 
-void Loader::LoadFull(std::string &input, Rule *rule) {
+void Loader::LoadFull(std::string input, Rule *rule) {
   using namespace std;
+  int pos = 0;
+  string dat;
 
-  int pos = input.find(',');
-  string str = input.substr(0, pos);
+  while (input.length() > 0) {
+    if ((pos = input.find(',')) != string::npos) {
+      dat = input.substr(0, pos);
+      input = input.substr(pos + 1);
+    } else {
+      dat = input;
+      input.erase();
+    }
+    stringstream ss(dat);
+    string prop, args;
+    ss >> prop;
 
-  bool isMatch = false;
-  if (input.find("match:", 0) == 0) {
-    isMatch = true;
-    input = input.substr(6);
+    bool isMatch = false;
+    if (prop.find("match:", 0) == 0) {
+      isMatch = true;
+      prop = prop.substr(6);
+    }
+    getline(ss, args);
+    args.erase(0, 1);
+    if (isMatch)
+      rule->props[prop] = args;
+    else
+      rule->effects[prop] = args;
   }
-  std::stringstream ss(input);
-  std::string prop, args;
-  ss >> prop;
-  std::getline(ss, args);
-  if (isMatch)
-    rule->props[prop] = args;
-  else
-    rule->effects[prop] = args;
 }
 
 RegexType Loader::GetRType(std::string &input) {

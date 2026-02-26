@@ -15,12 +15,11 @@ bool Saver::SaveStruct(Rule *rule, std::string path) {
     if (!DeleteStrings(rule->lineNum, content, path))
       return false;
 
-    std::vector<std::string> strings;
-    GetStrings(rule, strings);
+    std::string line = GetStrings(rule);
     int lineCount = rule->lineNum.back();
     rule->lineNum.clear();
-    for (auto str : strings)
-      strToVector(str, content, lineCount, rule);
+
+    strToVector(line, content, lineCount, rule);
 
     std::ofstream outfile(path);
     for (auto str : content) {
@@ -39,12 +38,11 @@ bool Saver::SaveStruct(Rule *rule, std::string path) {
 
     std::ofstream file(path, std::ios::app);
     std::vector<std::string> strings;
-    GetStrings(rule, strings);
+    std::string line = GetStrings(rule);
 
     std::vector<int> lineNum;
 
-    for (auto str : strings)
-      appendToFile(str, file, lineNum, lineCount);
+    appendToFile(line, file, lineNum, lineCount);
 
     rule->lineNum = lineNum;
 
@@ -84,7 +82,7 @@ bool Saver::DeleteStrings(std::vector<int> &ruleLineNum,
   return true;
 }
 
-void Saver::GetStrings(Rule *rule, std::vector<std::string> &strings) {
+std::string Saver::GetStrings(Rule *rule) {
   std::string ruleProps, ruleEffects;
   std::string ruleStart = "windowrule = ";
 
@@ -96,7 +94,7 @@ void Saver::GetStrings(Rule *rule, std::vector<std::string> &strings) {
   }
   std::string s = ruleStart + ruleProps + ruleEffects;
   s.pop_back();
-  strings.push_back(s);
+  return s;
 }
 
 void Saver::strToVector(std::string &str, std::vector<std::string> &content,
@@ -109,7 +107,7 @@ void Saver::strToVector(std::string &str, std::vector<std::string> &content,
 }
 
 void Saver::appendToFile(std::string &str, std::ofstream &file,
-                         std::vector<int> lineNum, int &lineCount) {
+                         std::vector<int> &lineNum, int &lineCount) {
   if (!str.empty()) {
     file << str << std::endl;
     lineNum.push_back(lineCount);

@@ -12,8 +12,8 @@ void HandleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
                                             secondEntry->get_text());
 }
 
-void HandleCheckButtonUpdate(std::string keyword, bool isEnabled) {
-  if (isEnabled)
+void HandleCheckButtonUpdate(std::string keyword, Gtk::CheckButton *cb) {
+  if (cb->get_active())
     RuleConfig::SetEffectsString(keyword, "1");
   else
     RuleConfig::RemoveEffect(keyword);

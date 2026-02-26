@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gtkmm/checkbutton.h"
 #include "gtkmm/dropdown.h"
 #include "gtkmm/entry.h"
 #include "gtkmm/scale.h"
@@ -10,7 +11,7 @@
 void HandleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
                            Gtk::Entry *secondEntry);
 
-void HandleCheckButtonUpdate(std::string keyword, bool isEnabled);
+void HandleCheckButtonUpdate(std::string keyword, Gtk::CheckButton *cb);
 
 void HandleOpacityUpdate(Gtk::SpinButton *active, Gtk::SpinButton *inactive,
                          Gtk::SpinButton *fullscreen, Gtk::Scale *scale,
