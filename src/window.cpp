@@ -4,6 +4,7 @@
 #include "gtkmm/alertdialog.h"
 #include "gtkmm/button.h"
 #include "gtkmm/checkbutton.h"
+#include "gtkmm/dropdown.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/filedialog.h"
 #include "gtkmm/label.h"
@@ -192,7 +193,7 @@ void MainWindow::RefreshRulesList() {
     return;
   }
 
-  for (int i = 0; i < winProps.size(); i++) {
+  for (uint i = 0; i < winProps.size(); i++) {
     ListBoxRow row;
     std::vector<int> ruleLineNum = lineNum.at(i);
 
@@ -277,6 +278,30 @@ void MainWindow::InitRuleEditor() {
 
   classEntry.set_tooltip_text("Windows with class matching RegEx below");
   titleEntry.set_tooltip_text("Windows with title matching RegEx below");
+  // простые пропы
+  Box *simplePropBox = nullptr;
+  auto stringListSProps = StringList::create({"не заданао", "вкл", "выкл"});
+  for (auto i : simpleProps) {
+    Gtk::DropDown *dd = make_managed<Gtk::DropDown>();
+    Gtk::Label label(i.name);
+
+    dd->set_model(stringListSProps);
+    dd->set_tooltip_text(i.tooltipText);
+    dd->property_selected().signal_changed().connect(
+        [i, dd]() { HandleDropDown(i.keyword, dd); });
+
+    if (simplePropBox == nullptr) {
+      simplePropBox = make_managed<Box>();
+      simplePropBox->append(label);
+      simplePropBox->append(*dd);
+    } else {
+      simplePropBox->append(label);
+      simplePropBox->append(*dd);
+      editRuleBox.append(*simplePropBox);
+      simplePropBox = nullptr;
+    }
+    dropDowns[i.keyword] = dd;
+  }
   // раздел2
 
   // прозрачность
@@ -314,7 +339,7 @@ void MainWindow::InitRuleEditor() {
   Box fullscreenOpBox;
   inactiveOpBox.set_margin(4);
 
-  Label fullL("inactive opacity%");
+  Label fullL("fullscreen opacity%");
   fullscreenOpBox.append(fullL);
   fullscreenOpScale.set_hexpand(true);
   fullscreenOpScale.set_range(0, 100);
@@ -383,6 +408,7 @@ void MainWindow::InitRuleEditor() {
   maximize.set_group(floating);
   winTypeBox.append(maximize);
   noType.set_label("Default");
+  noType.set_active(true);
   noType.signal_toggled().connect(
       []() { HandleWindowTypeUpdae(WindowType::none); });
   noType.set_group(floating);
@@ -415,9 +441,9 @@ void MainWindow::InitRuleEditor() {
   Label posLabel;
   posLabel.set_halign(Align::START);
   posLabel.set_markup("<b>Position</b>");
-  editRuleBox.append(posLabel);
   posLabel.set_margin(2);
   editRuleBox.append(posLabel);
+
   Box posBox;
   Label pXLabel("X:");
   Label pYLabel("Y:");
@@ -434,15 +460,27 @@ void MainWindow::InitRuleEditor() {
       "Moves a floating window. Can be int or %, e.g. 1280 or 50%");
   posYEntry.set_tooltip_text(
       "Moves a floating window. Can be int or %, e.g. 1280 or 50%");
-  // закреп
+  // простые
+  Label simplerLabel;
+  simplerLabel.set_halign(Align::START);
+  simplerLabel.set_markup("<b>Надо придумать название этому разделу</b>");
+  simplerLabel.set_margin(2);
+  editRuleBox.append(simplerLabel);
+  Box *simpleRulBox = nullptr;
   for (auto i : simpleRules) {
-    Gtk::CheckButton *cb =
-        new Gtk::CheckButton(); // make_managed<Gtk::CheckButton>();
+    Gtk::CheckButton *cb = make_managed<Gtk::CheckButton>();
     cb->set_label(i.name);
     cb->set_tooltip_text(i.tooltipText);
     cb->signal_toggled().connect(
         [i, cb]() { HandleCheckButtonUpdate(i.keyword, cb); });
-    editRuleBox.append(*cb);
+    if (simpleRulBox == nullptr) {
+      simpleRulBox = make_managed<Box>();
+      simpleRulBox->append(*cb);
+    } else {
+      simpleRulBox->append(*cb);
+      editRuleBox.append(*simpleRulBox);
+      simpleRulBox = nullptr;
+    }
     checkButtons[i.keyword] = cb;
   }
   checkButtons["float"] = &floating;
@@ -511,7 +549,9 @@ void MainWindow::LoadRule(std::string ruleString,
   for (auto i : rule->props) {
     std::string prop = i.first;
     std::cout << prop << " " << i.second << "пропы\n";
-    if (prop == "class") { // все перепроверить короче
+    if (dropDowns.contains(prop))
+      ParseDropDown(i.second, dropDowns[prop]);
+    else if (prop == "class") { // все перепроверить короче
       ParseRegExProps(i.second, &classEntry, &dropdownC);
     } else if (prop == "title")
       ParseRegExProps(i.second, &titleEntry, &dropdownT);
@@ -525,6 +565,9 @@ void MainWindow::LoadRule(std::string ruleString,
       ParseTwoFields(i.second, &sizeXEntry, &sizeYEntry);
     else if (prop == "pos")
       ParseTwoFields(i.second, &posXEntry, &posYEntry);
+    else if (prop == "opacity")
+      ParseOpacity(i.second, &activeOpacity, &inactiveOpacity,
+                   &fullscreenOpacity);
   }
 }
 

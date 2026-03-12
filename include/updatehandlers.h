@@ -21,3 +21,5 @@ void HandleRegExProps(std::string keyword, Gtk::Entry *entry,
                       Gtk::DropDown *dropdown);
 
 void HandleWindowTypeUpdae(WindowType type);
+
+void HandleDropDown(std::string keyword, Gtk::DropDown *dropdown);

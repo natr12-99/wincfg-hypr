@@ -10,7 +10,6 @@
 #include "gtkmm/searchentry2.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/window.h"
-#include "include/ruleconfig.h"
 
 #include <string>
 #include <unordered_map>
@@ -56,7 +55,8 @@ private:
   Gtk::Button exitFromEditing;
   Gtk::DropDown dropdownC, dropdownT;
   Gtk::SearchEntry2 rulesListSearch;
-  std::pmr::unordered_map<std::string, Gtk::CheckButton *> checkButtons;
+  std::unordered_map<std::string, Gtk::CheckButton *> checkButtons;
+  std::unordered_map<std::string, Gtk::DropDown *> dropDowns;
   std::string configPath;
 
   Glib::RefPtr<Gio::Settings> settings;

@@ -1,5 +1,7 @@
 #include "include/rulesparsers.h"
+#include "gtkmm/dropdown.h"
 #include "include/regextype.h"
+#include <locale>
 #include <sstream>
 
 RegexType GetRType(std::string &input) {
@@ -40,7 +42,8 @@ void ParseTwoFields(std::string input, Gtk::Entry *e1, Gtk::Entry *e2) {
 void ParseOpacity(std::string input, Gtk::SpinButton *active,
                   Gtk::SpinButton *inactive, Gtk::SpinButton *fullscreen) {
   float a = -1, i = -1, f = -1;
-  std::istringstream ss(input);
+  std::stringstream ss(input);
+  ss.imbue(std::locale::classic());
   ss >> a >> i >> f;
   if (i == -1 && f == -1) {
     active->set_value(a * 100);
@@ -51,5 +54,13 @@ void ParseOpacity(std::string input, Gtk::SpinButton *active,
     inactive->set_value(i * 100);
     if (f != -1)
       fullscreen->set_value(f * 100);
+  }
+}
+
+void ParseDropDown(std::string input, Gtk::DropDown *dd) {
+  if (input == "1") {
+    dd->set_selected(1);
+  } else {
+    dd->set_selected(2);
   }
 }

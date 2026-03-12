@@ -86,7 +86,7 @@ void HandleOpacityUpdate(Gtk::SpinButton *activeSB, Gtk::SpinButton *inactiveSB,
   float inactive = inactiveSB->get_value() / 100;
   float fullscreen = fullscreenSB->get_value() / 100;
   if (active == inactive && inactive == fullscreen)
-    RuleConfig::SetEffectsString("opacity", std::to_string(active));
+    RuleConfig::SetEffectsString("opacity", std::format("{}", active));
   else if (fullscreen == 1)
     RuleConfig::SetEffectsString("opacity",
                                  std::format("{} {}", active, inactive));
@@ -97,4 +97,14 @@ void HandleOpacityUpdate(Gtk::SpinButton *activeSB, Gtk::SpinButton *inactiveSB,
   scale->freeze_notify();
   scale->set_value(current->get_value_as_int());
   scale->thaw_notify();
+}
+
+void HandleDropDown(std::string keyword, Gtk::DropDown *dropdown) {
+  auto selected = dropdown->get_selected();
+  if (selected == 0)
+    RuleConfig::RemoveProp(keyword);
+  else if (selected == 1)
+    RuleConfig::SetPropsString(keyword, "1");
+  else if (selected == 2)
+    RuleConfig::SetPropsString(keyword, "0");
 }

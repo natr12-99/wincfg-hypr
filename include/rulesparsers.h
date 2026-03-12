@@ -14,3 +14,4 @@ void ParseRegExProps(std::string input, Gtk::Entry *entry,
 void ParseTwoFields(std::string input, Gtk::Entry *e1, Gtk::Entry *e2);
 void ParseOpacity(std::string input, Gtk::SpinButton *active,
                   Gtk::SpinButton *inactive, Gtk::SpinButton *fullscreen);
+void ParseDropDown(std::string input, Gtk::DropDown *dd);
