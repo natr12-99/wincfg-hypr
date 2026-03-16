@@ -132,3 +132,22 @@ const SimpleRule simpleProps[] = {
     {.name = "Modal",
      .keyword = "modal",
      .tooltipText = "Modal windows (e.g. “Are you sure” popups)"}};
+
+const SimpleRule regexFields[] = {
+    {.name = "Window Class",
+     .keyword = "class",
+     .tooltipText = "Windows with class matching RegEx below"},
+    {.name = "Window Title",
+     .keyword = "title",
+     .tooltipText = "Windows with title matching RegEx below"},
+    {.name = "Initial Class",
+     .keyword = "initial_class",
+     .tooltipText = "Windows with initialClass matching RegEx below"},
+    {.name = "Inital tittle",
+     .keyword = "initial_title",
+     .tooltipText = "Windows with initialTitle matching RegEx below"},
+    {.name = "Xdg tag",
+     .keyword = "xdg_tag",
+     .tooltipText = "Match a window by its xdgTag (see hyprctl clients to "
+                    "check if it has one)"},
+};

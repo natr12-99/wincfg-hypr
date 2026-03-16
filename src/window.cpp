@@ -5,6 +5,7 @@
 #include "gtkmm/button.h"
 #include "gtkmm/checkbutton.h"
 #include "gtkmm/dropdown.h"
+#include "gtkmm/entry.h"
 #include "gtkmm/enums.h"
 #include "gtkmm/filedialog.h"
 #include "gtkmm/label.h"
@@ -233,10 +234,8 @@ void MainWindow::InitRuleEditor() {
   editRuleWindow.set_child(editRuleBox);
   mainEditRuleBox.append(editRuleWindow);
   editRuleBox.set_margin(5);
-  editRuleBox.append(titleLabel);
   editRuleBox.set_orientation(Orientation::VERTICAL);
 
-  editRuleBox.append(titleEntry);
   std::string tooltipS =
       "<b>Unimportant:</b> this parameter will not be used in rule\n<b>Exact "
       "match:</b> this parameter must be the "
@@ -249,35 +248,27 @@ void MainWindow::InitRuleEditor() {
 
   auto stringList = StringList::create({"Unimportant", "Exact match", "Contain",
                                         "Contain Left", "Contain Right"});
-  dropdownT.set_model(stringList);
-  dropdownT.property_selected().signal_changed().connect(
-      [this]() { HandleRegExProps("title", &titleEntry, &dropdownT); });
-  dropdownT.set_tooltip_markup(tooltipS);
-  dropdownT.set_margin_top(2);
-  editRuleBox.append(dropdownT);
+  for (auto i : regexFields) {
+    Label lb(i.name);
+    Entry *entry = make_managed<Entry>();
+    entry->set_tooltip_text(i.tooltipText);
+    DropDown *dropDown = make_managed<DropDown>();
+    dropDown->set_model(stringList);
+    dropDown->set_tooltip_markup(tooltipS);
+    dropDown->property_selected().signal_changed().connect(
+        [dropDown, entry, i]() {
+          HandleRegExProps(i.keyword, entry, dropDown);
+        });
+    entry->signal_changed().connect([dropDown, entry, i]() {
+      HandleRegExProps(i.keyword, entry, dropDown);
+    });
+    editRuleBox.append(lb);
+    editRuleBox.append(*entry);
+    editRuleBox.append(*dropDown);
+    regexDropDowns[i.keyword] = dropDown;
+    regexEntrys[i.keyword] = entry;
+  }
 
-  Label classLabel("Window class");
-  classLabel.set_markup("<b>Window class</b>");
-  classLabel.set_margin_bottom(2);
-  classLabel.set_halign(Align::START);
-  editRuleBox.append(classLabel);
-
-  editRuleBox.append(classEntry);
-
-  dropdownC.set_model(stringList);
-  dropdownC.property_selected().signal_changed().connect(
-      [this]() { HandleRegExProps("class", &classEntry, &dropdownC); });
-  dropdownC.set_tooltip_markup(tooltipS);
-  dropdownC.set_margin_top(2);
-  editRuleBox.append(dropdownC);
-
-  titleEntry.signal_changed().connect(
-      [this]() { HandleRegExProps("title", &titleEntry, &dropdownT); });
-  classEntry.signal_changed().connect(
-      [this]() { HandleRegExProps("class", &classEntry, &dropdownC); });
-
-  classEntry.set_tooltip_text("Windows with class matching RegEx below");
-  titleEntry.set_tooltip_text("Windows with title matching RegEx below");
   // простые пропы
   Box *simplePropBox = nullptr;
   auto stringListSProps = StringList::create({"не заданао", "вкл", "выкл"});
@@ -523,9 +514,8 @@ void MainWindow::OpenRuleEditor(Box *_prevBox, Rule *rule) {
   set_child(mainEditRuleBox);
 }
 
-void MainWindow::ResetRuleEditor() {
-  dropdownT.set_selected(0);
-  dropdownC.set_selected(0);
+void MainWindow::ResetRuleEditor() { // сделать это!!!!
+
   noType.set_active(true);
 
   activeOpacity.set_value(100);
@@ -551,10 +541,8 @@ void MainWindow::LoadRule(std::string ruleString,
     std::cout << prop << " " << i.second << "пропы\n";
     if (dropDowns.contains(prop))
       ParseDropDown(i.second, dropDowns[prop]);
-    else if (prop == "class") { // все перепроверить короче
-      ParseRegExProps(i.second, &classEntry, &dropdownC);
-    } else if (prop == "title")
-      ParseRegExProps(i.second, &titleEntry, &dropdownT);
+    else if (regexEntrys.contains(prop)) // все перепроверить короче
+      ParseRegExProps(i.second, regexEntrys[prop], regexDropDowns[prop]);
   }
   for (auto i : rule->effects) {
     std::string prop = i.first;

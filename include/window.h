@@ -46,17 +46,17 @@ private:
 
   Gtk::Box *prevBox;
   Gtk::Box mainEditRuleBox;
-  Gtk::Entry titleEntry, classEntry, posXEntry, posYEntry, sizeXEntry,
-      sizeYEntry;
+  Gtk::Entry posXEntry, posYEntry, sizeXEntry, sizeYEntry;
   Gtk::CheckButton floating, fullscreen, tile, maximize, noType, pinned,
       noInitialFocusCB, stayFocusedCB, noMaxSizeCB;
   Gtk::SpinButton activeOpacity, inactiveOpacity, fullscreenOpacity;
   Gtk::Scale activeOpScale, inactiveOpScale, fullscreenOpScale;
   Gtk::Button exitFromEditing;
-  Gtk::DropDown dropdownC, dropdownT;
   Gtk::SearchEntry2 rulesListSearch;
   std::unordered_map<std::string, Gtk::CheckButton *> checkButtons;
   std::unordered_map<std::string, Gtk::DropDown *> dropDowns;
+  std::unordered_map<std::string, Gtk::DropDown *> regexDropDowns;
+  std::unordered_map<std::string, Gtk::Entry *> regexEntrys;
   std::string configPath;
 
   Glib::RefPtr<Gio::Settings> settings;
