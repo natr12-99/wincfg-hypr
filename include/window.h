@@ -47,8 +47,7 @@ private:
   Gtk::Box *prevBox;
   Gtk::Box mainEditRuleBox;
   Gtk::Entry posXEntry, posYEntry, sizeXEntry, sizeYEntry;
-  Gtk::CheckButton floating, fullscreen, tile, maximize, noType, pinned,
-      noInitialFocusCB, stayFocusedCB, noMaxSizeCB;
+  Gtk::CheckButton floating, fullscreen, tile, maximize, noType;
   Gtk::SpinButton activeOpacity, inactiveOpacity, fullscreenOpacity;
   Gtk::Scale activeOpScale, inactiveOpScale, fullscreenOpScale;
   Gtk::Button exitFromEditing;

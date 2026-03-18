@@ -250,9 +250,12 @@ void MainWindow::InitRuleEditor() {
                                         "Contain Left", "Contain Right"});
   for (auto i : regexFields) {
     Label lb(i.name);
+    lb.set_margin(2);
     Entry *entry = make_managed<Entry>();
+    entry->set_margin(2);
     entry->set_tooltip_text(i.tooltipText);
     DropDown *dropDown = make_managed<DropDown>();
+    dropDown->set_margin(2);
     dropDown->set_model(stringList);
     dropDown->set_tooltip_markup(tooltipS);
     dropDown->property_selected().signal_changed().connect(
@@ -275,7 +278,8 @@ void MainWindow::InitRuleEditor() {
   for (auto i : simpleProps) {
     Gtk::DropDown *dd = make_managed<Gtk::DropDown>();
     Gtk::Label label(i.name);
-
+    label.set_margin(2);
+    dd->set_margin(2);
     dd->set_model(stringListSProps);
     dd->set_tooltip_text(i.tooltipText);
     dd->property_selected().signal_changed().connect(
@@ -517,14 +521,22 @@ void MainWindow::OpenRuleEditor(Box *_prevBox, Rule *rule) {
 void MainWindow::ResetRuleEditor() { // сделать это!!!!
 
   noType.set_active(true);
+  for (auto i : dropDowns)
+    i.second->set_selected(0);
+  for (auto i : regexDropDowns)
+    i.second->set_selected(0);
+  for (auto i : regexEntrys)
+    i.second->set_text("");
+  for (auto i : checkButtons)
+    i.second->set_active(false);
 
   activeOpacity.set_value(100);
   inactiveOpacity.set_value(100);
+  fullscreenOpacity.set_value(100);
   posXEntry.set_text("");
   posYEntry.set_text("");
   sizeXEntry.set_text("");
   sizeYEntry.set_text("");
-  pinned.set_active(false);
 }
 
 void MainWindow::LoadRule(std::string ruleString,
