@@ -148,7 +148,6 @@ void MainWindow::RefreshWindowsList() {
   }
   std::string clientsStr;
   clientsStr = exec("hyprctl clients -j");
-
   nlohmann::json clients;
   try {
     clients = nlohmann::json::parse(clientsStr);
@@ -170,16 +169,30 @@ void MainWindow::RefreshWindowsList() {
     label->set_justify(Gtk::Justification::CENTER);
 
     but->signal_clicked().connect([this, item]() {
-      OpenRuleEditor(&windowSelectBox, nullptr); // сделать при открытии
-                                                 // клиентов (при создании)
+      OpenRuleEditor(&windowSelectBox, nullptr);
       ResetRuleEditor();
+      ParseHyprClients(item);
     });
 
     row.set_child(*but);
     listClients.append(row);
   }
 }
+void MainWindow::ParseHyprClients(nlohmann::basic_json<> clients) {
+  regexEntrys["title"]->set_text(clients["title"].get<std::string>());
+  regexEntrys["class"]->set_text(clients["class"].get<std::string>());
+  regexEntrys["initial_class"]->set_text(
+      clients["initialClass"].get<std::string>());
+  regexEntrys["initial_title"]->set_text(
+      clients["initialTitle"].get<std::string>());
 
+  if (clients["floating"].get<bool>()) {
+    sizeXEntry.set_text(std::to_string(clients["size"][0].get<int>()));
+    sizeYEntry.set_text(std::to_string(clients["size"][1].get<int>()));
+    posXEntry.set_text(std::to_string(clients["at"][0].get<int>()));
+    posYEntry.set_text(std::to_string(clients["at"][1].get<int>()));
+  }
+}
 void MainWindow::RefreshRulesList() {
   while (auto child = listRules.get_first_child()) {
     listRules.remove(*child);
@@ -518,7 +531,7 @@ void MainWindow::OpenRuleEditor(Box *_prevBox, Rule *rule) {
   set_child(mainEditRuleBox);
 }
 
-void MainWindow::ResetRuleEditor() { // сделать это!!!!
+void MainWindow::ResetRuleEditor() {
 
   noType.set_active(true);
   for (auto i : dropDowns)

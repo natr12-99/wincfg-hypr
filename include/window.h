@@ -11,6 +11,7 @@
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/window.h"
 
+#include <nlohmann/json_fwd.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -31,6 +32,7 @@ private:
   void LoadRule(std::string ruleString, std::vector<int> &ruleLineNum);
   void DeleteRule(std::vector<int> &ruleLineNum);
   void FileErrorAlert();
+  void ParseHyprClients(nlohmann::basic_json<> clients);
 
   Gtk::Box windowSelectBox;
   Gtk::ListBox listClients;
