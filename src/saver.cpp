@@ -8,6 +8,8 @@
 #include <vector>
 
 bool Saver::SaveStruct(Rule *rule, std::string path) {
+  if (rule->effects.size() == 0 && rule->props.size() == 0)
+    return true;
   setlocale(LC_ALL, "C");
 
   if (!rule->lineNum.empty()) {

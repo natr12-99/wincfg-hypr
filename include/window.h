@@ -6,6 +6,7 @@
 #include "gtkmm/dropdown.h"
 #include "gtkmm/entry.h"
 #include "gtkmm/listbox.h"
+#include "gtkmm/paned.h"
 #include "gtkmm/scale.h"
 #include "gtkmm/searchentry2.h"
 #include "gtkmm/spinbutton.h"
@@ -24,15 +25,18 @@ private:
   bool FilterRulesList(Gtk::ListBoxRow *row);
   void SelectConfigPath();
   void RefreshWindowsList();
+  void OnWindowSelected(Gtk::ListBoxRow *row);
   void RefreshRulesList();
+  void OnRuleSelected(Gtk::ListBoxRow *row);
 
   void InitRuleEditor();
-  void OpenRuleEditor(Gtk::Box *_prevBox, Rule *rule);
   void ResetRuleEditor();
   void LoadRule(std::string ruleString, std::vector<int> &ruleLineNum);
   void DeleteRule(std::vector<int> &ruleLineNum);
   void FileErrorAlert();
   void ParseHyprClients(nlohmann::basic_json<> clients);
+
+  Gtk::Paned layout;
 
   Gtk::Box windowSelectBox;
   Gtk::ListBox listClients;

@@ -18,13 +18,14 @@
 #include "include/loader.h"
 #include "include/rule.h"
 #include "include/ruleconfig.h"
+#include "include/rulerow.h"
 #include "include/rulesparsers.h"
 #include "include/saver.h"
 #include "include/simplerule.h"
 #include "include/updatehandlers.h"
 #include "include/windowtype.h"
-#include "sigc++/adaptors/bind.h"
 #include "sigc++/functors/mem_fun.h"
+#include <format>
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
@@ -33,34 +34,25 @@ using namespace Gtk;
 
 MainWindow::MainWindow() {
   set_title("Hyprland rules editor");
-  set_default_size(500, 520);
-
   InitRuleEditor();
-
+  set_default_size(600, 600);
   refreshListButton.set_icon_name("view-refresh-symbolic");
   refreshListButton.set_tooltip_text("Refresh");
   refreshListButton.set_margin(5);
   windowSelectBox.set_orientation(Orientation::VERTICAL);
   refreshListButton.signal_clicked().connect(
       sigc::mem_fun(*this, &MainWindow::RefreshWindowsList));
-  goToRuleList.signal_clicked().connect([this]() { set_child(ruleSelectBox); });
+  goToRuleList.signal_clicked().connect(
+      [this]() { layout.set_start_child(ruleSelectBox); });
   goToRuleList.set_icon_name("go-previous-symbolic");
   goToRuleList.set_tooltip_text("Back to rules list");
   goToRuleList.set_margin(5);
-
-  newEmtryRuleButton.set_label("New empty rule");
-  newEmtryRuleButton.set_margin(5);
-  newEmtryRuleButton.signal_clicked().connect([this]() {
-    OpenRuleEditor(&windowSelectBox, nullptr);
-    ResetRuleEditor();
-  });
-  listClients.set_margin(5);
 
   Box windowListTopBox;
   windowListTopBox.set_hexpand(true);
   Label windowSelectL;
   windowSelectL.set_hexpand(true);
-  windowSelectL.set_markup("<b>New rule</b>");
+  windowSelectL.set_markup("<b>Window list</b>");
   windowListTopBox.append(windowSelectL);
   windowListTopBox.append(refreshListButton);
   windowListTopBox.append(goToRuleList);
@@ -70,8 +62,10 @@ MainWindow::MainWindow() {
   ScrolledWindow swClients;
   swClients.set_vexpand(true);
   swClients.set_child(listClients);
+  listClients.signal_row_selected().connect(
+      sigc::mem_fun(*this, &MainWindow::OnWindowSelected));
   windowSelectBox.append(swClients);
-  //
+  // вот здесь это начинается
   refreshRulesListButton.set_icon_name("view-refresh-symbolic");
   refreshRulesListButton.set_tooltip_text("Refresh");
   refreshRulesListButton.set_margin(5);
@@ -86,10 +80,10 @@ MainWindow::MainWindow() {
       sigc::mem_fun(*this, &MainWindow::SelectConfigPath));
   goToWindowsList.signal_clicked().connect([this]() {
     RefreshWindowsList();
-    set_child(windowSelectBox);
+    layout.set_start_child(windowSelectBox);
   });
   goToWindowsList.set_icon_name("document-new-symbolic");
-  goToWindowsList.set_tooltip_text("New rule");
+  goToWindowsList.set_tooltip_text("Show windows list (hyprctl clients)");
   goToWindowsList.set_margin(5);
   listRules.set_margin(5);
 
@@ -114,8 +108,13 @@ MainWindow::MainWindow() {
   swRules.set_child(listRules);
   swRules.set_vexpand(true);
   ruleSelectBox.append(swRules);
+  listRules.signal_row_selected().connect(
+      sigc::mem_fun(*this, &MainWindow::OnRuleSelected));
 
-  set_child(ruleSelectBox);
+  set_child(layout);
+  layout.set_start_child(ruleSelectBox);
+  layout.set_end_child(mainEditRuleBox);
+  layout.set_position(222);
 
   configPath = g_get_user_config_dir();
   configPath += "/hypr/windowrules.conf";
@@ -127,6 +126,7 @@ MainWindow::MainWindow() {
     configPath = settings->get_string("config-path");
     RefreshRulesList();
   }
+  RuleConfig::InitRule(new Rule());
 }
 
 bool MainWindow::FilterRulesList(Gtk::ListBoxRow *row) {
@@ -152,32 +152,35 @@ void MainWindow::RefreshWindowsList() {
   try {
     clients = nlohmann::json::parse(clientsStr);
   } catch (const nlohmann::json::parse_error &e) {
-    auto dialog =
-        AlertDialog::create("Eror getting window list: " + clientsStr);
+    auto dialog = AlertDialog::create(
+        "Error while execution 'hyprctl clients -j':\n" + clientsStr);
     dialog->show();
     return;
   }
 
   for (auto item : clients) {
-    ListBoxRow row;
-    std::string s_class = item["class"];
-    std::string s_title = item["title"];
+    auto row = make_managed<RuleRow>();
+    Label label(std::format("class: {}\ntitle {}",
+                            item["class"].get<std::string>(),
+                            item["title"].get<std::string>()),
+                Align::START);
+    row->set_child(label);
+    label.set_justify(Gtk::Justification::CENTER);
+    row->clients = item;
 
-    Button *but =
-        make_managed<Button>("class: " + s_class + "\ntitle: " + s_title);
-    auto label = dynamic_cast<Gtk::Label *>(but->get_child());
-    label->set_justify(Gtk::Justification::CENTER);
-
-    but->signal_clicked().connect([this, item]() {
-      OpenRuleEditor(&windowSelectBox, nullptr);
-      ResetRuleEditor();
-      ParseHyprClients(item);
-    });
-
-    row.set_child(*but);
-    listClients.append(row);
+    listClients.append(*row);
   }
 }
+
+void MainWindow::OnWindowSelected(Gtk::ListBoxRow *row) {
+  if (row) {
+    RuleConfig::InitRule(new Rule);
+    auto ruleRow = dynamic_cast<RuleRow *>(row);
+    ResetRuleEditor();
+    ParseHyprClients(ruleRow->clients);
+  }
+}
+
 void MainWindow::ParseHyprClients(nlohmann::basic_json<> clients) {
   regexEntrys["title"]->set_text(clients["title"].get<std::string>());
   regexEntrys["class"]->set_text(clients["class"].get<std::string>());
@@ -191,6 +194,7 @@ void MainWindow::ParseHyprClients(nlohmann::basic_json<> clients) {
     sizeYEntry.set_text(std::to_string(clients["size"][1].get<int>()));
     posXEntry.set_text(std::to_string(clients["at"][0].get<int>()));
     posYEntry.set_text(std::to_string(clients["at"][1].get<int>()));
+    checkButtons["float"]->set_active(true);
   }
 }
 void MainWindow::RefreshRulesList() {
@@ -208,30 +212,22 @@ void MainWindow::RefreshRulesList() {
   }
 
   for (uint i = 0; i < winProps.size(); i++) {
-    ListBoxRow row;
+    RuleRow *row = make_managed<RuleRow>();
     std::vector<int> ruleLineNum = lineNum.at(i);
+    Label label(winProps.at(i), Align::START);
+    row->set_child(label);
+    row->ruleLineNum = ruleLineNum;
+    row->set_name(rulesStrings.at(i));
 
-    Button *but = make_managed<Button>(winProps.at(i));
-    auto label = dynamic_cast<Gtk::Label *>(but->get_child());
-    label->set_justify(Gtk::Justification::CENTER);
+    listRules.append(*row);
+  }
+}
 
-    but->set_hexpand(true);
-    but->signal_clicked().connect(
-        sigc::bind(sigc::mem_fun(*this, &MainWindow::LoadRule),
-                   rulesStrings.at(i), ruleLineNum));
-
-    Button *delBut = make_managed<Button>();
-    delBut->set_icon_name("edit-delete-symbolic");
-    delBut->set_tooltip_text("Delete rule");
-    delBut->signal_clicked().connect(
-        sigc::bind(sigc::mem_fun(*this, &MainWindow::DeleteRule), ruleLineNum));
-    Box box2;
-    box2.set_hexpand(true);
-    box2.append(*but);
-    box2.append(*delBut);
-
-    row.set_child(box2);
-    listRules.append(row);
+void MainWindow::OnRuleSelected(Gtk::ListBoxRow *row) {
+  if (row) {
+    auto ruleRow = dynamic_cast<RuleRow *>(row);
+    ResetRuleEditor();
+    LoadRule(ruleRow->get_name(), ruleRow->ruleLineNum);
   }
 }
 
@@ -390,7 +386,7 @@ void MainWindow::InitRuleEditor() {
   editRuleBox.append(winTypeLabel);
   winTypeLabel.set_markup("<b>Window type</b>");
   winTypeLabel.set_halign(Align::START);
-  editRuleBox.append(winTypeLabel);
+
   Box winTypeBox;
   floating.set_label("Floating");
   floating.set_tooltip_text("Floats a window");
@@ -497,38 +493,28 @@ void MainWindow::InitRuleEditor() {
   checkButtons["maximize"] = &maximize; // проверить
 
   Box bottomBox;
-  Button *exitB = make_managed<Button>("Canel");
-  exitB->signal_clicked().connect([this]() {
-    set_child(*prevBox);
-    RefreshRulesList();
-    RefreshWindowsList();
+  Button *clearB = make_managed<Button>("Clear");
+  clearB->signal_clicked().connect([this]() {
+    ResetRuleEditor();
+    RuleConfig::InitRule(new Rule());
   });
-  exitB->set_margin(5);
-  exitB->set_hexpand(false);
+  clearB->set_margin(5);
+  clearB->set_hexpand(false);
 
   Button *saveB = make_managed<Button>("Save");
   saveB->signal_clicked().connect([this]() {
     if (!RuleConfig::Save(configPath))
       FileErrorAlert();
+    RefreshRulesList();
+    RefreshWindowsList();
   });
   saveB->set_margin(5);
   Box t;
   t.set_hexpand(true);
   bottomBox.append(t);
-  bottomBox.append(*exitB);
+  bottomBox.append(*clearB);
   bottomBox.append(*saveB);
   mainEditRuleBox.append(bottomBox);
-}
-
-void MainWindow::OpenRuleEditor(Box *_prevBox, Rule *rule) {
-  if (rule == nullptr)
-    rule = new Rule();
-
-  RuleConfig::InitRule(rule);
-
-  prevBox = _prevBox;
-
-  set_child(mainEditRuleBox);
 }
 
 void MainWindow::ResetRuleEditor() {
@@ -559,7 +545,7 @@ void MainWindow::LoadRule(std::string ruleString,
 
   loader.LoadFull(ruleString, rule);
 
-  OpenRuleEditor(&ruleSelectBox, rule);
+  RuleConfig::InitRule(rule);
   RuleConfig::SetLines(ruleLineNum);
   for (auto i : rule->props) {
     std::string prop = i.first;
