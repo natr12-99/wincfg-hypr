@@ -13,9 +13,12 @@ void HandleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
 }
 
 void HandleCheckButtonUpdate(std::string keyword, Gtk::CheckButton *cb) {
-  if (cb->get_active())
-    RuleConfig::SetEffectsString(keyword, "1");
-  else
+  if (cb->get_active()) {
+    if (keyword != "decorate")
+      RuleConfig::SetEffectsString(keyword, "1");
+    else
+      RuleConfig::SetEffectsString(keyword, "0");
+  } else
     RuleConfig::RemoveEffect(keyword);
 }
 
@@ -52,15 +55,24 @@ void HandleWindowTypeUpdae(WindowType type) {
     RuleConfig::RemoveEffect("fullscreen");
     RuleConfig::RemoveEffect("tile");
     RuleConfig::RemoveEffect("maximize");
+    RuleConfig::RemoveEffect("pseudo");
     break;
   case WindowType::fullscreen:
     RuleConfig::SetEffectsString("fullscreen", "1");
     RuleConfig::RemoveEffect("float");
     RuleConfig::RemoveEffect("tile");
     RuleConfig::RemoveEffect("maximize");
+    RuleConfig::RemoveEffect("pseudo");
     break;
   case WindowType::tile:
     RuleConfig::SetEffectsString("tile", "1");
+    RuleConfig::RemoveEffect("float");
+    RuleConfig::RemoveEffect("fullscreen");
+    RuleConfig::RemoveEffect("maximize");
+    RuleConfig::RemoveEffect("pseudo");
+    break;
+  case WindowType::pseudotile:
+    RuleConfig::SetEffectsString("pseudo", "1");
     RuleConfig::RemoveEffect("float");
     RuleConfig::RemoveEffect("fullscreen");
     RuleConfig::RemoveEffect("maximize");
@@ -70,12 +82,14 @@ void HandleWindowTypeUpdae(WindowType type) {
     RuleConfig::RemoveEffect("float");
     RuleConfig::RemoveEffect("tile");
     RuleConfig::RemoveEffect("fullscreen");
+    RuleConfig::RemoveEffect("pseudo");
     break;
   case WindowType::none:
     RuleConfig::RemoveEffect("maximize");
     RuleConfig::RemoveEffect("float");
     RuleConfig::RemoveEffect("tile");
     RuleConfig::RemoveEffect("fullscreen");
+    RuleConfig::RemoveEffect("pseudo");
   }
 }
 

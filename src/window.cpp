@@ -87,6 +87,13 @@ MainWindow::MainWindow() {
   goToWindowsList.set_margin(5);
   listRules.set_margin(5);
 
+  deleteRule.set_icon_name("user-trash-symbolic");
+  deleteRule.set_tooltip_text("Delete selected rule");
+  deleteRule.set_margin(5);
+  deleteRule.signal_clicked().connect([this]() {
+    DeleteRule(listRules.get_selected_row());
+    RefreshWindowsList();
+  });
   Box rulesListTopBox;
   rulesListTopBox.append(selectConfigButton);
   rulesListTopBox.set_hexpand(true);
@@ -94,6 +101,7 @@ MainWindow::MainWindow() {
   ruleSelectL.set_hexpand(true);
   ruleSelectL.set_markup("<b>Select rule</b>");
   rulesListTopBox.append(ruleSelectL);
+  rulesListTopBox.append(deleteRule);
   rulesListTopBox.append(refreshRulesListButton);
   rulesListTopBox.append(goToWindowsList);
   ruleSelectBox.append(rulesListTopBox);
@@ -114,7 +122,7 @@ MainWindow::MainWindow() {
   set_child(layout);
   layout.set_start_child(ruleSelectBox);
   layout.set_end_child(mainEditRuleBox);
-  layout.set_position(255);
+  layout.set_position(301);
 
   configPath = g_get_user_config_dir();
   configPath += "/hypr/windowrules.conf";
@@ -162,8 +170,7 @@ void MainWindow::RefreshWindowsList() {
     auto row = make_managed<RuleRow>();
     Label label(std::format("class: {}\ntitle {}",
                             item["class"].get<std::string>(),
-                            item["title"].get<std::string>()),
-                Align::START);
+                            item["title"].get<std::string>()));
     row->set_child(label);
     label.set_justify(Gtk::Justification::CENTER);
     row->clients = item;
@@ -234,7 +241,9 @@ void MainWindow::OnRuleSelected(Gtk::ListBoxRow *row) {
 void MainWindow::InitRuleEditor() {
   mainEditRuleBox.set_orientation(Orientation::VERTICAL);
   Label titleLabel;
-  titleLabel.set_markup("<b>Props</b>");
+  titleLabel.set_markup(
+      "<b>Props</b>\n(used to determine if a window should get the rule)");
+  titleLabel.set_justify(Gtk::Justification::CENTER);
   titleLabel.set_margin_bottom(2);
   Box editRuleBox;
   editRuleBox.append(titleLabel);
@@ -283,7 +292,8 @@ void MainWindow::InitRuleEditor() {
 
   // простые пропы
   Box *simplePropBox = nullptr;
-  auto stringListSProps = StringList::create({"не заданао", "вкл", "выкл"});
+  auto stringListSProps =
+      StringList::create({"Unimportant", "Match", "Doesn't match"});
   for (auto i : simpleProps) {
     Gtk::DropDown *dd = make_managed<Gtk::DropDown>();
     Gtk::Label label(i.name);
@@ -404,6 +414,12 @@ void MainWindow::InitRuleEditor() {
       []() { HandleWindowTypeUpdae(WindowType::tile); });
   tile.set_group(floating);
   winTypeBox.append(tile);
+  pseudotile.set_label("Pseudotile");
+  pseudotile.set_tooltip_text("Pseudotiles a window");
+  pseudotile.signal_toggled().connect(
+      []() { HandleWindowTypeUpdae(WindowType::pseudotile); });
+  pseudotile.set_group(floating);
+  winTypeBox.append(pseudotile);
   fullscreen.set_label("Fullscreen");
   fullscreen.set_tooltip_text("Fullscreens a window");
   fullscreen.signal_toggled().connect(
@@ -589,13 +605,16 @@ void MainWindow::LoadRule(std::string ruleString,
   }
 }
 
-void MainWindow::DeleteRule(std::vector<int> &ruleLineNum) {
-  Saver saver;
-  if (!saver.DeleteRule(ruleLineNum, configPath)) {
-    FileErrorAlert();
-    return;
+void MainWindow::DeleteRule(Gtk::ListBoxRow *row) {
+  if (row) {
+    Saver saver;
+    auto ruleRow = dynamic_cast<RuleRow *>(row);
+    if (!saver.DeleteRule(ruleRow->ruleLineNum, configPath)) {
+      FileErrorAlert();
+      return;
+    }
+    RefreshRulesList();
   }
-  RefreshRulesList();
 }
 void MainWindow::FileErrorAlert() {
   auto dialog = AlertDialog::create("Error");

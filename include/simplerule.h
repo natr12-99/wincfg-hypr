@@ -43,10 +43,9 @@ const SimpleRule simpleRules[] = {
      .tooltipText = "Dims everything around the window. Please note that this "
                     "rule is meant for floating windows and using it on tiled "
                     "ones may result in strange behavior."},
-    {.name = "Decorate",
+    {.name = "No decorate",
      .keyword = "decorate",
-     .tooltipText =
-         "(default is true) Whether to draw window decorations or not"},
+     .tooltipText = "Do not draw window decorations"},
     {.name = "Focus on activate",
      .keyword = "focus_on_activate",
      .tooltipText = "Whether Hyprland should focus an app that requests to be "

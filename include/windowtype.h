@@ -1,10 +1,10 @@
 #pragma once
 
-enum class WindowType
-{
-    floating,
-    fullscreen,
-    tile,
-    maximize,
-    none
+enum class WindowType {
+  floating,
+  fullscreen,
+  tile,
+  pseudotile,
+  maximize,
+  none
 };

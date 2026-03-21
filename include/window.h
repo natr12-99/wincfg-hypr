@@ -7,6 +7,7 @@
 #include "gtkmm/entry.h"
 #include "gtkmm/label.h"
 #include "gtkmm/listbox.h"
+#include "gtkmm/listboxrow.h"
 #include "gtkmm/paned.h"
 #include "gtkmm/scale.h"
 #include "gtkmm/searchentry2.h"
@@ -33,7 +34,7 @@ private:
   void InitRuleEditor();
   void ResetRuleEditor();
   void LoadRule(std::string ruleString, std::vector<int> &ruleLineNum);
-  void DeleteRule(std::vector<int> &ruleLineNum);
+  void DeleteRule(Gtk::ListBoxRow *row);
   void FileErrorAlert();
   void ParseHyprClients(nlohmann::basic_json<> clients);
 
@@ -50,11 +51,12 @@ private:
   Gtk::Button refreshRulesListButton;
   Gtk::Button selectConfigButton;
   Gtk::Button goToWindowsList;
+  Gtk::Button deleteRule;
   Gtk::SearchEntry2 rulesListSearch;
 
   Gtk::Box mainEditRuleBox;
   Gtk::Entry posXEntry, posYEntry, sizeXEntry, sizeYEntry;
-  Gtk::CheckButton floating, fullscreen, tile, maximize, noType;
+  Gtk::CheckButton floating, fullscreen, tile, pseudotile, maximize, noType;
   Gtk::SpinButton activeOpacity, inactiveOpacity, fullscreenOpacity;
   Gtk::Scale activeOpScale, inactiveOpScale, fullscreenOpScale;
   Gtk::Label savingStateNotify;
