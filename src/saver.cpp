@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-bool Saver::SaveStruct(Rule *rule, std::string path) {
+int Saver::SaveStruct(Rule *rule, std::string path) {
   if (rule->effects.size() == 0 && rule->props.size() == 0)
-    return true;
+    return 2;
   setlocale(LC_ALL, "C");
 
   if (!rule->lineNum.empty()) {
@@ -32,7 +32,7 @@ bool Saver::SaveStruct(Rule *rule, std::string path) {
     int lineCount = 0;
     std::ifstream lineCounter(path);
     if (!lineCounter.good())
-      return false;
+      return 1;
     std::string uselessStr;
     while (std::getline(lineCounter, uselessStr))
       lineCount++;
@@ -50,7 +50,7 @@ bool Saver::SaveStruct(Rule *rule, std::string path) {
 
     file.close();
   }
-  return true;
+  return 0;
 }
 
 bool Saver::DeleteRule(std::vector<int> &ruleLineNum, std::string path) {

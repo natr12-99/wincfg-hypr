@@ -1,6 +1,6 @@
 #include "include/window.h"
 
-#include "glib.h"
+#include "glibmm/main.h"
 #include "gtkmm/alertdialog.h"
 #include "gtkmm/button.h"
 #include "gtkmm/checkbutton.h"
@@ -10,8 +10,8 @@
 #include "gtkmm/filedialog.h"
 #include "gtkmm/label.h"
 #include "gtkmm/listboxrow.h"
-#include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
+#include "gtkmm/separator.h"
 #include "gtkmm/stringlist.h"
 #include "include/firstlaunch.h"
 #include "include/func.h"
@@ -58,7 +58,7 @@ MainWindow::MainWindow() {
   windowListTopBox.append(goToRuleList);
 
   windowSelectBox.append(windowListTopBox);
-  windowSelectBox.append(newEmtryRuleButton);
+
   ScrolledWindow swClients;
   swClients.set_vexpand(true);
   swClients.set_child(listClients);
@@ -114,7 +114,7 @@ MainWindow::MainWindow() {
   set_child(layout);
   layout.set_start_child(ruleSelectBox);
   layout.set_end_child(mainEditRuleBox);
-  layout.set_position(222);
+  layout.set_position(255);
 
   configPath = g_get_user_config_dir();
   configPath += "/hypr/windowrules.conf";
@@ -234,10 +234,10 @@ void MainWindow::OnRuleSelected(Gtk::ListBoxRow *row) {
 void MainWindow::InitRuleEditor() {
   mainEditRuleBox.set_orientation(Orientation::VERTICAL);
   Label titleLabel;
-  titleLabel.set_markup("<b>Window title</b>");
+  titleLabel.set_markup("<b>Props</b>");
   titleLabel.set_margin_bottom(2);
-  titleLabel.set_halign(Align::START);
   Box editRuleBox;
+  editRuleBox.append(titleLabel);
   ScrolledWindow editRuleWindow;
   editRuleWindow.set_vexpand(true);
   editRuleWindow.set_child(editRuleBox);
@@ -258,7 +258,7 @@ void MainWindow::InitRuleEditor() {
   auto stringList = StringList::create({"Unimportant", "Exact match", "Contain",
                                         "Contain Left", "Contain Right"});
   for (auto i : regexFields) {
-    Label lb(i.name);
+    Label lb(i.name, Align::START);
     lb.set_margin(2);
     Entry *entry = make_managed<Entry>();
     entry->set_margin(2);
@@ -307,7 +307,12 @@ void MainWindow::InitRuleEditor() {
     dropDowns[i.keyword] = dd;
   }
   // раздел2
-
+  Separator separator;
+  editRuleBox.append(separator);
+  Label effectsLabel;
+  effectsLabel.set_markup("<b>Effects</b>");
+  effectsLabel.set_margin(2);
+  editRuleBox.append(effectsLabel);
   // прозрачность
   Box activeOpBox;
   activeOpBox.set_margin(4);
@@ -503,13 +508,28 @@ void MainWindow::InitRuleEditor() {
 
   Button *saveB = make_managed<Button>("Save");
   saveB->signal_clicked().connect([this]() {
-    if (!RuleConfig::Save(configPath))
+    int result = RuleConfig::Save(configPath);
+    if (result == 1)
       FileErrorAlert();
+    else if (result == 2) {
+      savingStateNotify.set_text("Rule is empty. Nothing to save");
+      savingStateNotify.show();
+    } else {
+      savingStateNotify.set_text("Saved to " + configPath);
+      savingStateNotify.show();
+    }
+    Glib::signal_timeout().connect(
+        [&]() {
+          savingStateNotify.hide();
+          return false;
+        },
+        1777);
     RefreshRulesList();
     RefreshWindowsList();
   });
   saveB->set_margin(5);
   Box t;
+  t.append(savingStateNotify);
   t.set_hexpand(true);
   bottomBox.append(t);
   bottomBox.append(*clearB);
@@ -518,7 +538,6 @@ void MainWindow::InitRuleEditor() {
 }
 
 void MainWindow::ResetRuleEditor() {
-
   noType.set_active(true);
   for (auto i : dropDowns)
     i.second->set_selected(0);

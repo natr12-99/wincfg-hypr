@@ -21,7 +21,7 @@ void RuleConfig::RemoveProp(std::string key) { rule->props.erase(key); }
 
 void RuleConfig::RemoveEffect(std::string key) { rule->effects.erase(key); }
 
-bool RuleConfig::Save(std::string path) {
+int RuleConfig::Save(std::string path) {
   Saver saver;
   return saver.SaveStruct(rule, path);
 }

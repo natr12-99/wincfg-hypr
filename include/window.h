@@ -5,6 +5,7 @@
 #include "gtkmm/checkbutton.h"
 #include "gtkmm/dropdown.h"
 #include "gtkmm/entry.h"
+#include "gtkmm/label.h"
 #include "gtkmm/listbox.h"
 #include "gtkmm/paned.h"
 #include "gtkmm/scale.h"
@@ -16,7 +17,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-struct Rule;
+
 class MainWindow : public Gtk::Window {
 public:
   MainWindow();
@@ -41,7 +42,7 @@ private:
   Gtk::Box windowSelectBox;
   Gtk::ListBox listClients;
   Gtk::Button refreshListButton;
-  Gtk::Button newEmtryRuleButton;
+
   Gtk::Button goToRuleList;
 
   Gtk::Box ruleSelectBox;
@@ -49,15 +50,15 @@ private:
   Gtk::Button refreshRulesListButton;
   Gtk::Button selectConfigButton;
   Gtk::Button goToWindowsList;
+  Gtk::SearchEntry2 rulesListSearch;
 
-  Gtk::Box *prevBox;
   Gtk::Box mainEditRuleBox;
   Gtk::Entry posXEntry, posYEntry, sizeXEntry, sizeYEntry;
   Gtk::CheckButton floating, fullscreen, tile, maximize, noType;
   Gtk::SpinButton activeOpacity, inactiveOpacity, fullscreenOpacity;
   Gtk::Scale activeOpScale, inactiveOpScale, fullscreenOpScale;
-  Gtk::Button exitFromEditing;
-  Gtk::SearchEntry2 rulesListSearch;
+  Gtk::Label savingStateNotify;
+
   std::unordered_map<std::string, Gtk::CheckButton *> checkButtons;
   std::unordered_map<std::string, Gtk::DropDown *> dropDowns;
   std::unordered_map<std::string, Gtk::DropDown *> regexDropDowns;

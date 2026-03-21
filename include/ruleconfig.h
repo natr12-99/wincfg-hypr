@@ -8,7 +8,7 @@ class RuleConfig {
 public:
   static void InitRule(Rule *rul);
   static void SetLines(std::vector<int> &lines) { rule->lineNum = lines; }
-  static bool Save(std::string path);
+  static int Save(std::string path);
 
   static void SetEffectsString(std::string keyword, std::string str);
   static void SetPropsString(std::string keyword, std::string str);

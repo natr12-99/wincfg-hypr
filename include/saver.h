@@ -7,7 +7,7 @@ class Rule;
 
 class Saver {
 public:
-  bool SaveStruct(Rule *rule, std::string path);
+  int SaveStruct(Rule *rule, std::string path);
   bool DeleteRule(std::vector<int> &ruleLineNum, std::string path);
 
 private:
