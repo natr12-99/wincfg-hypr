@@ -16,24 +16,24 @@ const SimpleRule simpleRules[] = {
     {.name = "No inital focus",
      .keyword = "no_initial_focus",
      .tooltipText = "Disables the initial focus to the window"},
-    {.name = "Pin window",
+    {.name = "Pin window on all workspaces",
      .keyword = "pin",
      .tooltipText = "Pins the window (i.e. show it on all workspaces). Note: "
                     "floating only."},
-    {.name = "persistent_size",
+    {.name = "Persistent size",
      .keyword = "persistent_size",
      .tooltipText =
          "For floating windows, internally store their size. When a new "
          "floating window opens with the same class and title, restore the "
          "saved size."},
-    {.name = "no max size",
+    {.name = "No max size limitations",
      .keyword = "no_max_size",
      .tooltipText = "Removes max size limitations. Especially useful with "
                     "windows that report invalid max sizes (e.g. winecfg)."},
-    {.name = "stay focused",
+    {.name = "Always stay focused",
      .keyword = "stay_focused",
      .tooltipText = "Forces focus on the window as long as it’s visible."},
-    {.name = "allows input",
+    {.name = "Allows input",
      .keyword = "allows_input",
      .tooltipText = "Forces an XWayland window to receive input, even if it "
                     "requests not to do so. (Might fix issues like Game "
@@ -53,16 +53,16 @@ const SimpleRule simpleRules[] = {
     {.name = "Keep aspect ratio",
      .keyword = "keep_aspect_ratio",
      .tooltipText = "Forces aspect ratio when resizing window with the mouse."},
-    {.name = "Nearest neighbor",
+    {.name = "Use nearest neighbor filtering",
      .keyword = "nearest_neighbor",
      .tooltipText = "Forces the window to use nearest neighbor filtering."},
-    {.name = "No anim",
+    {.name = "No animations",
      .keyword = "no_anim",
      .tooltipText = "Disables the animations for the window."},
     {.name = "No blur",
      .keyword = "no_blur",
      .tooltipText = "Disables blur for the window."},
-    {.name = "No dim",
+    {.name = "No dimming",
      .keyword = "no_dim",
      .tooltipText = "Disables window dimming for the window."},
     {.name = "No focus",
@@ -78,7 +78,7 @@ const SimpleRule simpleRules[] = {
     {.name = "No shortcuts inhibit",
      .keyword = "no_shortcuts_inhibit",
      .tooltipText = "Disallows the app from inhibiting your shortcuts."},
-    {.name = "No screen share",
+    {.name = "Hide on screen share",
      .keyword = "no_screen_share",
      .tooltipText = "Hides the window and its popups from screen sharing by "
                     "drawing black rectangles in their place. The rectangles "
@@ -100,11 +100,11 @@ const SimpleRule simpleRules[] = {
      .tooltipText = "Whether the fullscreen mode should always be the same as "
                     "the one sent to the window (will only take effect on the "
                     "next fullscreen mode change)."},
-    {.name = "Immediate",
+    {.name = "Force allow tearing",
      .keyword = "immediate",
      .tooltipText =
          "Forces the window to allow tearing. See the Tearing page."},
-    {.name = "Xray",
+    {.name = "Xray blur",
      .keyword = "xray",
      .tooltipText = "Sets blur xray mode for the window."},
     {.name = "Render unfocused",
@@ -147,6 +147,6 @@ const SimpleRule regexFields[] = {
      .tooltipText = "Windows with initialTitle matching RegEx below"},
     {.name = "Xdg tag",
      .keyword = "xdg_tag",
-     .tooltipText = "Match a window by its xdgTag (see hyprctl clients to "
+     .tooltipText = "Match a window by its xdgTag (see hyprctlzz clients to "
                     "check if it has one)"},
 };

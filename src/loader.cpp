@@ -29,7 +29,7 @@ bool Loader::LoadOnlyProps(std::vector<std::string> &winProps,
 
     for (sregex_iterator it(input.begin(), input.end(), matchRegex), end;
          it != end; ++it) {
-      matches += (*it)[1].str();
+      matches += (*it)[1].str() + ' ';
     }
     winProps.push_back(matches);
     auto t = input.substr(input.find('=') + 1);

@@ -26,7 +26,6 @@
 #include "include/windowtype.h"
 #include "sigc++/functors/mem_fun.h"
 #include <format>
-#include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -324,10 +323,14 @@ void MainWindow::InitRuleEditor() {
   effectsLabel.set_margin(2);
   editRuleBox.append(effectsLabel);
   // прозрачность
+  Label opacityL;
+  opacityL.set_markup("<b>Opacity</b>");
+  opacityL.set_halign(Align::START);
+  editRuleBox.append(opacityL);
   Box activeOpBox;
   activeOpBox.set_margin(4);
 
-  Label actL("active opacity%   ");
+  Label actL("Active opacity%");
   activeOpBox.append(actL);
   activeOpScale.set_hexpand(true);
   activeOpScale.set_range(0, 100);
@@ -342,8 +345,7 @@ void MainWindow::InitRuleEditor() {
   // прозрачность
   Box inactiveOpBox;
   inactiveOpBox.set_margin(4);
-
-  Label inacL("inactive opacity%");
+  Label inacL("Inactive opacity%");
   inactiveOpBox.append(inacL);
   inactiveOpScale.set_hexpand(true);
   inactiveOpScale.set_range(0, 100);
@@ -354,11 +356,11 @@ void MainWindow::InitRuleEditor() {
   inactiveOpacity.set_increments(1, 10);
   inactiveOpacity.set_value(100);
   inactiveOpBox.append(inactiveOpacity);
-
-  Box fullscreenOpBox;
   inactiveOpBox.set_margin(4);
 
-  Label fullL("fullscreen opacity%");
+  Box fullscreenOpBox;
+  fullscreenOpBox.set_margin(4);
+  Label fullL("Fullscreen opacity%");
   fullscreenOpBox.append(fullL);
   fullscreenOpScale.set_hexpand(true);
   fullscreenOpScale.set_range(0, 100);
@@ -488,7 +490,7 @@ void MainWindow::InitRuleEditor() {
   // простые
   Label simplerLabel;
   simplerLabel.set_halign(Align::START);
-  simplerLabel.set_markup("<b>Надо придумать название этому разделу</b>");
+  simplerLabel.set_markup("<b>Simple props</b>");
   simplerLabel.set_margin(2);
   editRuleBox.append(simplerLabel);
   Box *simpleRulBox = nullptr;
@@ -511,7 +513,8 @@ void MainWindow::InitRuleEditor() {
   checkButtons["float"] = &floating;
   checkButtons["fullscreen"] = &fullscreen;
   checkButtons["tile"] = &tile;
-  checkButtons["maximize"] = &maximize; // проверить
+  checkButtons["pseudo"] = &pseudotile;
+  checkButtons["maximize"] = &maximize;
 
   Box bottomBox;
   Button *clearB = make_managed<Button>("Clear");
@@ -584,15 +587,13 @@ void MainWindow::LoadRule(std::string ruleString,
   RuleConfig::SetLines(ruleLineNum);
   for (auto i : rule->props) {
     std::string prop = i.first;
-    std::cout << prop << " " << i.second << "пропы\n";
     if (dropDowns.contains(prop))
       ParseDropDown(i.second, dropDowns[prop]);
-    else if (regexEntrys.contains(prop)) // все перепроверить короче
+    else if (regexEntrys.contains(prop))
       ParseRegExProps(i.second, regexEntrys[prop], regexDropDowns[prop]);
   }
   for (auto i : rule->effects) {
     std::string prop = i.first;
-    std::cout << prop << " " << i.second << "эффекты\n";
     if (checkButtons.contains(prop))
       checkButtons[prop]->set_active(true);
     else if (prop == "size")

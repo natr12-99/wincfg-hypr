@@ -58,7 +58,7 @@ void ParseOpacity(std::string input, Gtk::SpinButton *active,
 }
 
 void ParseDropDown(std::string input, Gtk::DropDown *dd) {
-  if (input == "1") {
+  if (input == "1" || input == "on" || input == "true") {
     dd->set_selected(1);
   } else {
     dd->set_selected(2);
