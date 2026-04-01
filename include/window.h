@@ -37,6 +37,7 @@ private:
   void DeleteRule(Gtk::ListBoxRow *row);
   void FileErrorAlert();
   void ParseHyprClients(nlohmann::basic_json<> clients);
+  void ResetEntry(Gtk::Entry *first, Gtk::Entry *second, std::string key);
 
   Gtk::Paned layout;
 

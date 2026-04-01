@@ -10,6 +10,7 @@
 #include "gtkmm/filedialog.h"
 #include "gtkmm/label.h"
 #include "gtkmm/listboxrow.h"
+#include "gtkmm/object.h"
 #include "gtkmm/scrolledwindow.h"
 #include "gtkmm/separator.h"
 #include "gtkmm/stringlist.h"
@@ -464,6 +465,12 @@ void MainWindow::InitRuleEditor() {
       "Resizes a floating window. Can be int or %, e.g. 1280 or 50%");
   sizeYEntry.set_tooltip_text(
       "Resizes a floating window. Can be int or %, e.g. 1280 or 50%");
+  auto resetSize = make_managed<Gtk::Button>();
+  resetSize->set_icon_name("edit-clear-symbolic");
+  resetSize->signal_clicked().connect(
+      [this]() { ResetEntry(&sizeXEntry, &sizeYEntry, "size"); });
+  resetSize->set_margin_start(4);
+  sizeBox.append(*resetSize);
   // положение
   Label posLabel;
   posLabel.set_halign(Align::START);
@@ -487,6 +494,12 @@ void MainWindow::InitRuleEditor() {
       "Moves a floating window. Can be int or %, e.g. 1280 or 50%");
   posYEntry.set_tooltip_text(
       "Moves a floating window. Can be int or %, e.g. 1280 or 50%");
+  auto resetPos = make_managed<Gtk::Button>();
+  resetPos->set_icon_name("edit-clear-symbolic");
+  resetPos->signal_clicked().connect(
+      [this]() { ResetEntry(&posXEntry, &posYEntry, "move"); });
+  resetPos->set_margin_start(4);
+  posBox.append(*resetPos);
   // простые
   Label simplerLabel;
   simplerLabel.set_halign(Align::START);
@@ -632,4 +645,11 @@ void MainWindow::SelectConfigPath() {
                      configPath = file->get_path();
                      settings->set_string("config-path", configPath);
                    });
+}
+
+void MainWindow::ResetEntry(Gtk::Entry *first, Gtk::Entry *second,
+                            std::string key) {
+  first->set_text("");
+  second->set_text("");
+  RuleConfig::RemoveEffect(key);
 }
