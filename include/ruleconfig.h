@@ -2,12 +2,12 @@
 
 #include "rule.h"
 #include <string>
-#include <vector>
 
 class RuleConfig {
 public:
-  static void InitRule(Rule *rul);
-  static void SetLines(std::vector<int> &lines) { rule->lineNum = lines; }
+  static void SetName(std::string name);
+  static void InitRule(Rule &rul);
+
   static int Save(std::string path);
 
   static void SetEffectsString(std::string keyword, std::string str);
@@ -17,5 +17,5 @@ public:
   static void RemoveEffect(std::string key);
 
 private:
-  inline static Rule *rule = nullptr;
+  inline static Rule rule;
 };

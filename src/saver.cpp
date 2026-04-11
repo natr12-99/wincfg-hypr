@@ -85,6 +85,7 @@ bool Saver::DeleteStrings(std::vector<int> &ruleLineNum,
 }
 
 std::string Saver::GetStrings(Rule *rule) {
+    if (rule->name.empty()){
   std::string ruleProps, ruleEffects;
   std::string ruleStart = "windowrule = ";
 
@@ -97,6 +98,20 @@ std::string Saver::GetStrings(Rule *rule) {
   std::string s = ruleStart + ruleProps + ruleEffects;
   s.pop_back();
   return s;
+  }else{
+      std::string ruleProps, ruleEffects;
+  std::string ruleStart = "windowrule {\n";
+
+  for (auto i : rule->props) {
+    ruleProps += std::format("\tmatch:{} {}\n", i.first, i.second);
+  }
+  for (auto i : rule->effects) {
+    ruleEffects += std::format("\t{} {}\n", i.first, i.second);
+  }
+  std::string s = ruleStart + ruleProps + ruleEffects+"}\n";
+//  s.pop_back();//посмотреть звчем я эту шиуку добавил
+  return s;
+  }
 }
 
 void Saver::strToVector(std::string &str, std::vector<std::string> &content,

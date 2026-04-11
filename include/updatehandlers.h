@@ -8,6 +8,7 @@
 #include "include/windowtype.h"
 #include <string>
 
+void HandleNameUpdate(Gtk::Entry *nameEntry);
 void HandleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
                            Gtk::Entry *secondEntry);
 
@@ -20,6 +21,6 @@ void HandleOpacityUpdate(Gtk::SpinButton *active, Gtk::SpinButton *inactive,
 void HandleRegExProps(std::string keyword, Gtk::Entry *entry,
                       Gtk::DropDown *dropdown);
 
-void HandleWindowTypeUpdae(WindowType type);
+void HandleWindowTypeUpdate(WindowType type);
 
 void HandleDropDown(std::string keyword, Gtk::DropDown *dropdown);
