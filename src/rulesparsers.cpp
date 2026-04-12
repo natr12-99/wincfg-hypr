@@ -32,7 +32,7 @@ void ParseRegExProps(std::string input, Gtk::Entry *entry,
   entry->set_text(input);
 }
 
-void ParseTwoFields(std::string input, Gtk::Entry *e1, Gtk::Entry *e2) {
+void ParseTwoFields(const std::string input, Gtk::Entry *e1, Gtk::Entry *e2) {
   std::istringstream ss(input);
   std::string a, b;
   ss >> a >> b;
@@ -40,7 +40,7 @@ void ParseTwoFields(std::string input, Gtk::Entry *e1, Gtk::Entry *e2) {
   e2->set_text(b);
 }
 
-void ParseOpacity(std::string input, Gtk::SpinButton *active,
+void ParseOpacity(const std::string input, Gtk::SpinButton *active,
                   Gtk::Scale *activeS, Gtk::SpinButton *inactive,
                   Gtk::Scale *inactiveS, Gtk::SpinButton *fullscreen,
                   Gtk::Scale *fullscreenS) {
@@ -67,7 +67,7 @@ void ParseOpacity(std::string input, Gtk::SpinButton *active,
   }
 }
 
-void ParseDropDown(std::string input, Gtk::DropDown *dd) {
+void ParseDropDown(const std::string input, Gtk::DropDown *dd) {
   if (input == "1" || input == "on" || input == "true") {
     dd->set_selected(1);
   } else {

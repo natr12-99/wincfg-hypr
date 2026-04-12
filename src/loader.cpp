@@ -21,7 +21,6 @@ bool Loader::Load(std::string path, std::vector<Rule> &rules) {
       fileLine++;
       continue;
     } else if (type == 1) {
-
       std::size_t pos = 0;
       string dat;
       Rule rule;
@@ -36,10 +35,11 @@ bool Loader::Load(std::string path, std::vector<Rule> &rules) {
         dat = dat.substr(dat.find('=') + 1);
         stringstream ss(dat);
         string prop, args;
+        
         ss >> prop;
 
         bool isMatch = false;
-        if (prop.find("match:", 0) == 0) {
+        if (prop.starts_with("match:")) {
           isMatch = true;
           prop = prop.substr(6);
         }
@@ -67,21 +67,22 @@ bool Loader::Load(std::string path, std::vector<Rule> &rules) {
           fileLine++;
           break;
         }
-        stringstream ss(input); // отределай еще кнопки очищения где аргумент
-                                // массив из полей которые очистить
-        std::string first, sec, last; // переименуй это сделай trim еще
-        ss >> first >> sec;
-        getline(ss, last);
+        auto pos = input.find("=");
+        if (pos != string::npos) {
 
-        if (first == "name") {
-          rule.name = Trim(last);
+          string first = input.substr(0, pos);
+          string last = input.substr(pos + 1);
+          first = Trim(first);
+          last = Trim(last);
+          if (first == "name") {
+            rule.name = Trim(last);
 
-        } else if (first.find("match:", 0) == 0) {
-          rule.props[first.substr(6)] = Trim(last);
-        } else if (sec == "=") { // проверку что не пустое
-          rule.effects[first] = Trim(last);
+          } else if (first.starts_with("match:")) {
+            rule.props[first.substr(6)] = Trim(last);
+          } else
+            rule.effects[first] = Trim(last);
         }
-        fileLine++; // push в массив
+        fileLine++;
       }
       rules.push_back(rule);
     }
