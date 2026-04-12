@@ -29,6 +29,7 @@
 #include <format>
 #include <nlohmann/json.hpp>
 #include <string>
+#include <vector>
 
 using namespace Gtk;
 
@@ -245,13 +246,24 @@ void MainWindow::InitRuleEditor() {
   mainEditRuleBox.set_orientation(Orientation::VERTICAL);
   Box editRuleBox;
   Label nameTitleLabel;
+  Box nameBox;
+ nameEntry.set_hexpand(true);
   nameTitleLabel.set_markup("<b>Name</b>");
   nameEntry.set_placeholder_text(
       "If the field is empty it will be anonymous rule");
   nameEntry.signal_changed().connect(
       [this]() { HandleNameUpdate(&nameEntry); });
+  auto resetName = make_managed<Gtk::Button>();
+  resetName->set_icon_name("edit-clear-symbolic");
+  resetName->signal_clicked().connect([this]() {
+    std::vector<Gtk::Entry *> my_entries = {&nameEntry};
+    ResetEntry(my_entries);
+  });
+  resetName->set_margin_start(4);
+  nameBox.append(nameEntry);
+  nameBox.append(*resetName);
   editRuleBox.append(nameTitleLabel);
-  editRuleBox.append(nameEntry);
+  editRuleBox.append(nameBox);
 
   Label titleLabel;
   titleLabel.set_markup(
@@ -480,8 +492,10 @@ void MainWindow::InitRuleEditor() {
       "Resizes a floating window. Can be int or %, e.g. 1280 or 50%");
   auto resetSize = make_managed<Gtk::Button>();
   resetSize->set_icon_name("edit-clear-symbolic");
-  resetSize->signal_clicked().connect(
-      [this]() { ResetEntry(&sizeXEntry, &sizeYEntry, "size"); });
+  resetSize->signal_clicked().connect([this]() {
+    std::vector<Gtk::Entry *> my_entries = {&sizeXEntry, &sizeYEntry};
+    ResetEntry(my_entries);
+  });
   resetSize->set_margin_start(4);
   sizeBox.append(*resetSize);
   // положение
@@ -509,8 +523,10 @@ void MainWindow::InitRuleEditor() {
       "Moves a floating window. Can be int or %, e.g. 1280 or 50%");
   auto resetPos = make_managed<Gtk::Button>();
   resetPos->set_icon_name("edit-clear-symbolic");
-  resetPos->signal_clicked().connect(
-      [this]() { ResetEntry(&posXEntry, &posYEntry, "move"); });
+  resetPos->signal_clicked().connect([this]() {
+    std::vector<Gtk::Entry *> my_entries = {&posXEntry, &posYEntry};
+    ResetEntry(my_entries);
+  });
   resetPos->set_margin_start(4);
   posBox.append(*resetPos);
   // простые
@@ -630,7 +646,7 @@ void MainWindow::LoadRule(Rule &rule) {
       checkButtons[prop]->set_active(true);
     else if (prop == "size")
       ParseTwoFields(i.second, &sizeXEntry, &sizeYEntry);
-    else if (prop == "pos")
+    else if (prop == "move")
       ParseTwoFields(i.second, &posXEntry, &posYEntry);
     else if (prop == "opacity")
       ParseOpacity(i.second, &activeOpacity, &activeOpScale, &inactiveOpacity,
@@ -667,9 +683,7 @@ void MainWindow::SelectConfigPath() {
                    });
 }
 
-void MainWindow::ResetEntry(Gtk::Entry *first, Gtk::Entry *second,
-                            std::string key) {
-  first->set_text("");
-  second->set_text("");
-  RuleConfig::RemoveEffect(key);
+void MainWindow::ResetEntry(std::vector<Gtk::Entry *> &entries) {
+  for (auto i : entries)
+    i->set_text("");
 }

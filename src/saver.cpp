@@ -17,7 +17,7 @@ int Saver::SaveStruct(Rule *rule, std::string path) {
       return false;
     std::vector<std::string> lines;
     GetStrings(rule, lines);
-    int lineCount = rule->lineNum.back();
+    int lineCount = rule->lineNum.front();
     rule->lineNum.clear();
 
     strToVector(lines, content, lineCount, rule);
