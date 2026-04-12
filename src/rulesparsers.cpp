@@ -1,5 +1,6 @@
 #include "include/rulesparsers.h"
 #include "gtkmm/dropdown.h"
+#include "gtkmm/scale.h"
 #include "include/regextype.h"
 #include <locale>
 #include <sstream>
@@ -40,20 +41,29 @@ void ParseTwoFields(std::string input, Gtk::Entry *e1, Gtk::Entry *e2) {
 }
 
 void ParseOpacity(std::string input, Gtk::SpinButton *active,
-                  Gtk::SpinButton *inactive, Gtk::SpinButton *fullscreen) {
-  float a = -1, i = -1, f = -1; // добавить сюда установку слайдеров
+                  Gtk::Scale *activeS, Gtk::SpinButton *inactive,
+                  Gtk::Scale *inactiveS, Gtk::SpinButton *fullscreen,
+                  Gtk::Scale *fullscreenS) {
+  float a = -1, i = -1, f = -1;
   std::stringstream ss(input);
   ss.imbue(std::locale::classic());
   ss >> a >> i >> f;
   if (i == -1 && f == -1) {
     active->set_value(a * 100);
+    activeS->set_value(a * 100);
     inactive->set_value(a * 100);
+    inactiveS->set_value(a * 100);
     fullscreen->set_value(a * 100);
+    fullscreenS->set_value(a * 100);
   } else {
     active->set_value(a * 100);
+    activeS->set_value(a * 100);
     inactive->set_value(i * 100);
-    if (f != -1)
+    inactiveS->set_value(i * 100);
+    if (f != -1) {
       fullscreen->set_value(f * 100);
+      fullscreenS->set_value(f * 100);
+    }
   }
 }
 

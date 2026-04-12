@@ -218,8 +218,12 @@ void MainWindow::RefreshRulesList() {
   for (uint i = 0; i < rules.size(); i++) {
     RuleRow *row = make_managed<RuleRow>();
     std::string name = rules[i].name;
-    if (name.empty())
-      name = "пока пустое";
+    if (name.empty()) {
+      for (auto a : rules[i].props) {
+        name += std::format("match: {} {}\n", a.first, a.second);
+      }
+      name.pop_back();
+    }
     Label label(name, Align::START);
     row->set_child(label);
     row->rule = rules[i];
@@ -240,8 +244,9 @@ void MainWindow::InitRuleEditor() {
   mainEditRuleBox.set_orientation(Orientation::VERTICAL);
   Box editRuleBox;
   Label nameTitleLabel;
-  nameTitleLabel.set_markup("<b>Имя</b>");
-  nameEntry.set_placeholder_text("emptry будет анонимно");
+  nameTitleLabel.set_markup("<b>Name</b>");
+  nameEntry.set_placeholder_text(
+      "If the field is empty it will be anonymous rule");
   nameEntry.signal_changed().connect(
       [this]() { HandleNameUpdate(&nameEntry); });
   editRuleBox.append(nameTitleLabel);
@@ -567,6 +572,7 @@ void MainWindow::InitRuleEditor() {
 
 void MainWindow::ResetRuleEditor() {
   MainWindow::blockUpdateHandle = true;
+  nameEntry.set_text("");
   noType.set_active(true);
   for (auto i : dropDowns)
     i.second->set_selected(0);
@@ -580,6 +586,9 @@ void MainWindow::ResetRuleEditor() {
   activeOpacity.set_value(100);
   inactiveOpacity.set_value(100);
   fullscreenOpacity.set_value(100);
+  activeOpScale.set_value(100);
+  inactiveOpScale.set_value(100);
+  fullscreenOpScale.set_value(100);
   posXEntry.set_text("");
   posYEntry.set_text("");
   sizeXEntry.set_text("");
@@ -592,7 +601,9 @@ void MainWindow::LoadRule(Rule &rule) {
   RuleConfig::InitRule(rule);
 
   MainWindow::blockUpdateHandle = true;
-
+  if (!rule.name.empty()) {
+    nameEntry.set_text(rule.name);
+  }
   for (auto i : rule.props) {
     std::string prop = i.first;
     if (dropDowns.contains(prop))
@@ -609,8 +620,8 @@ void MainWindow::LoadRule(Rule &rule) {
     else if (prop == "pos")
       ParseTwoFields(i.second, &posXEntry, &posYEntry);
     else if (prop == "opacity")
-      ParseOpacity(i.second, &activeOpacity, &inactiveOpacity,
-                   &fullscreenOpacity);
+      ParseOpacity(i.second, &activeOpacity, &activeOpScale, &inactiveOpacity,
+                   &inactiveOpScale, &fullscreenOpacity, &fullscreenOpScale);
   }
   MainWindow::blockUpdateHandle = false;
 }

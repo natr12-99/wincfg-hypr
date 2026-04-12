@@ -8,7 +8,8 @@
 #include <string>
 
 void HandleNameUpdate(Gtk::Entry *nameEntry) {
-  RuleConfig::SetName(nameEntry->get_text());
+  if (!MainWindow::blockUpdateHandle)
+    RuleConfig::SetName(nameEntry->get_text());
 }
 
 void HandleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
