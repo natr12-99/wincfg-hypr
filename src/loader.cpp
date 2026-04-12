@@ -1,16 +1,13 @@
 #include "include/loader.h"
-#include "include/regextype.h"
 #include "include/rule.h"
+#include <cstddef>
 #include <fstream>
-#include <regex>
+
 #include <sstream>
 #include <string>
 #include <vector>
 
-bool Loader::LoadOnlyProps(std::vector<std::string> &winProps,
-                           std::vector<std::string> &rulesStrings,
-                           std::vector<std::vector<int>> &lineNum,
-                           std::string path) {
+bool Loader::Load(std::string path, std::vector<Rule> &rules) {
   using namespace std;
   ifstream file(path);
   if (!file.good())
@@ -19,89 +16,102 @@ bool Loader::LoadOnlyProps(std::vector<std::string> &winProps,
   string input;
   int fileLine = 0;
   while (getline(file, input)) {
-    if (!isWindowRule(input)) {
+    int type = isWindowRule(input); //
+    if (type == 0) {
       fileLine++;
       continue;
+    } else if (type == 1) {
+
+      std::size_t pos = 0;
+      string dat;
+      Rule rule;
+      while (input.length() > 0) {
+        if ((pos = input.find(',')) != string::npos) {
+          dat = input.substr(0, pos);
+          input = input.substr(pos + 1);
+        } else {
+          dat = input;
+          input.erase();
+        }
+        dat = dat.substr(dat.find('=') + 1);
+        stringstream ss(dat);
+        string prop, args;
+        ss >> prop;
+
+        bool isMatch = false;
+        if (prop.find("match:", 0) == 0) {
+          isMatch = true;
+          prop = prop.substr(6);
+        }
+        getline(ss, args);
+
+        if (isMatch)
+          rule.props[prop] = Trim(args);
+        else
+          rule.effects[prop] = Trim(args);
+      }
+      vector<int> vec{fileLine};
+      rule.lineNum = vec;
+      rules.push_back(rule);
+      fileLine++;
+    } else if (type == 2) {
+      vector<int> lineNum;
+      Rule rule;
+      lineNum.push_back(fileLine);
+
+      fileLine++;
+      while (getline(file, input)) {
+        if (input.find('}') == 0) {
+          lineNum.push_back(fileLine);
+          rule.lineNum = lineNum;
+          fileLine++;
+          break;
+        }
+        stringstream ss(input); // отределай еще кнопки очищения где аргумент
+                                // массив из полей которые очистить
+        std::string first, sec, last; // переименуй это сделай trim еще
+        ss >> first >> sec;
+        getline(ss, last);
+
+        if (first == "name") {
+          rule.name = Trim(last);
+
+        } else if (first.find("match:", 0) == 0) {
+          rule.props[first.substr(6)] = Trim(last);
+        } else if (sec == "=") { // проверку что не пустое
+          rule.effects[first] = Trim(last);
+        }
+        fileLine++; // push в массив
+      }
+      rules.push_back(rule);
     }
-
-    string matches;
-    regex matchRegex(R"(match:([^,]+))");
-
-    for (sregex_iterator it(input.begin(), input.end(), matchRegex), end;
-         it != end; ++it) {
-      matches += (*it)[1].str() + ' ';
-    }
-    winProps.push_back(matches);
-    auto t = input.substr(input.find('=') + 1);
-
-    rulesStrings.push_back(t.substr(t.find_first_not_of(' ')));
-    vector<int> vec{fileLine};
-    lineNum.push_back(vec);
-    fileLine++;
   }
 
   file.close();
   return true;
 }
 
-void Loader::LoadFull(std::string input, Rule *rule) {
-  using namespace std;
-  int pos = 0;
-  string dat;
-
-  while (input.length() > 0) {
-    if ((pos = input.find(',')) != string::npos) {
-      dat = input.substr(0, pos);
-      input = input.substr(pos + 1);
-    } else {
-      dat = input;
-      input.erase();
-    }
-    stringstream ss(dat);
-    string prop, args;
-    ss >> prop;
-
-    bool isMatch = false;
-    if (prop.find("match:", 0) == 0) {
-      isMatch = true;
-      prop = prop.substr(6);
-    }
-    getline(ss, args);
-    args.erase(0, 1);
-    if (isMatch)
-      rule->props[prop] = args;
-    else
-      rule->effects[prop] = args;
-  }
+std::string Loader::Trim(std::string &input) {
+  auto first = input.find_first_not_of(" \t");
+  auto last = input.find_last_not_of(" \t");
+  return input.substr(first, last - first + 1);
 }
 
-RegexType Loader::GetRType(std::string &input) {
-  if (input.starts_with("^") && input.ends_with("$")) {
-    input = input.substr(1, input.length() - 2);
-    return RegexType::fullMatch;
-  } else if (input.starts_with(".*")) {
-    input = input.substr(2);
-
-    if (input.ends_with(".*")) {
-      input = input.substr(0, input.length() - 2);
-      return RegexType::contain;
-    } else
-      return RegexType::containLeft;
-  } else if (input.ends_with(".*")) {
-    input = input.substr(0, input.length() - 2);
-    return RegexType::containRight;
-  } else {
-    return RegexType::fullMatch;
-  }
-}
-
-bool Loader::isWindowRule(const std::string &line) {
+int Loader::isWindowRule(const std::string &line) {
   auto firstNonSpace = line.find_first_not_of(" \t");
   if (firstNonSpace == std::string::npos)
-    return false;
+    return 0;
 
   if (line[firstNonSpace] == '#')
-    return false;
+    return 0;
 
-  return line.find("windowrule =", firstNonSpace) != std::string::npos;
+  if (line.find("windowrule", firstNonSpace) != std::string::npos) {
+    if (line.find("=", firstNonSpace + 10) != std::string::npos)
+      return 1;
+    else if (line.find("{", firstNonSpace + 10) != std::string::npos)
+      return 2;
+    else
+      return 0;
+  } else
+    return 0;
 }

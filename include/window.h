@@ -13,15 +13,16 @@
 #include "gtkmm/searchentry2.h"
 #include "gtkmm/spinbutton.h"
 #include "gtkmm/window.h"
+#include "include/rule.h"
 
 #include <nlohmann/json_fwd.hpp>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 class MainWindow : public Gtk::Window {
 public:
   MainWindow();
+  inline static bool blockUpdateHandle = false;
 
 private:
   bool FilterRulesList(Gtk::ListBoxRow *row);
@@ -33,7 +34,7 @@ private:
 
   void InitRuleEditor();
   void ResetRuleEditor();
-  void LoadRule(std::string ruleString, std::vector<int> &ruleLineNum);
+  void LoadRule(Rule &rule);
   void DeleteRule(Gtk::ListBoxRow *row);
   void FileErrorAlert();
   void ParseHyprClients(nlohmann::basic_json<> clients);
@@ -56,7 +57,7 @@ private:
   Gtk::SearchEntry2 rulesListSearch;
 
   Gtk::Box mainEditRuleBox;
-  Gtk::Entry posXEntry, posYEntry, sizeXEntry, sizeYEntry;
+  Gtk::Entry posXEntry, posYEntry, sizeXEntry, sizeYEntry, nameEntry;
   Gtk::CheckButton floating, fullscreen, tile, pseudotile, maximize, noType;
   Gtk::SpinButton activeOpacity, inactiveOpacity, fullscreenOpacity;
   Gtk::Scale activeOpScale, inactiveOpScale, fullscreenOpScale;

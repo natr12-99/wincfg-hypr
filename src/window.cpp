@@ -134,7 +134,6 @@ MainWindow::MainWindow() {
     configPath = settings->get_string("config-path");
     RefreshRulesList();
   }
-  RuleConfig::InitRule(new Rule());
 }
 
 bool MainWindow::FilterRulesList(Gtk::ListBoxRow *row) {
@@ -181,7 +180,8 @@ void MainWindow::RefreshWindowsList() {
 
 void MainWindow::OnWindowSelected(Gtk::ListBoxRow *row) {
   if (row) {
-    RuleConfig::InitRule(new Rule);
+    auto rule = new Rule();
+    RuleConfig::InitRule(*rule);
     auto ruleRow = dynamic_cast<RuleRow *>(row);
     ResetRuleEditor();
     ParseHyprClients(ruleRow->clients);
@@ -210,21 +210,24 @@ void MainWindow::RefreshRulesList() {
   }
 
   Loader loader;
-  std::vector<std::string> winProps;
-  std::vector<std::string> rulesStrings;
-  std::vector<std::vector<int>> lineNum;
-  if (!loader.LoadOnlyProps(winProps, rulesStrings, lineNum, configPath)) {
+  std::vector<Rule> rules;
+  if (!loader.Load(configPath, rules)) {
     FileErrorAlert();
     return;
   }
 
-  for (uint i = 0; i < winProps.size(); i++) {
+  for (uint i = 0; i < rules.size(); i++) {
     RuleRow *row = make_managed<RuleRow>();
-    std::vector<int> ruleLineNum = lineNum.at(i);
-    Label label(winProps.at(i), Align::START);
+    std::string name = rules[i].name;
+    if (name.empty()) {
+      for (auto a : rules[i].props) {
+        name += std::format("match: {} {}\n", a.first, a.second);
+      }
+      name.pop_back();
+    }
+    Label label(name, Align::START);
     row->set_child(label);
-    row->ruleLineNum = ruleLineNum;
-    row->set_name(rulesStrings.at(i));
+    row->rule = rules[i];
 
     listRules.append(*row);
   }
@@ -234,18 +237,28 @@ void MainWindow::OnRuleSelected(Gtk::ListBoxRow *row) {
   if (row) {
     auto ruleRow = dynamic_cast<RuleRow *>(row);
     ResetRuleEditor();
-    LoadRule(ruleRow->get_name(), ruleRow->ruleLineNum);
+    LoadRule(ruleRow->rule);
   }
 }
 
 void MainWindow::InitRuleEditor() {
   mainEditRuleBox.set_orientation(Orientation::VERTICAL);
+  Box editRuleBox;
+  Label nameTitleLabel;
+  nameTitleLabel.set_markup("<b>Name</b>");
+  nameEntry.set_placeholder_text(
+      "If the field is empty it will be anonymous rule");
+  nameEntry.signal_changed().connect(
+      [this]() { HandleNameUpdate(&nameEntry); });
+  editRuleBox.append(nameTitleLabel);
+  editRuleBox.append(nameEntry);
+
   Label titleLabel;
   titleLabel.set_markup(
       "<b>Props</b>\n(used to determine if a window should get the rule)");
   titleLabel.set_justify(Gtk::Justification::CENTER);
   titleLabel.set_margin_bottom(2);
-  Box editRuleBox;
+
   editRuleBox.append(titleLabel);
   ScrolledWindow editRuleWindow;
   editRuleWindow.set_vexpand(true);
@@ -409,36 +422,36 @@ void MainWindow::InitRuleEditor() {
   floating.set_label("Floating");
   floating.set_tooltip_text("Floats a window");
   floating.signal_toggled().connect(
-      []() { HandleWindowTypeUpdae(WindowType::floating); });
+      []() { HandleWindowTypeUpdate(WindowType::floating); });
   winTypeBox.append(floating);
   tile.set_label("Tile");
   tile.set_tooltip_text("Tiles a window");
   tile.signal_toggled().connect(
-      []() { HandleWindowTypeUpdae(WindowType::tile); });
+      []() { HandleWindowTypeUpdate(WindowType::tile); });
   tile.set_group(floating);
   winTypeBox.append(tile);
   pseudotile.set_label("Pseudotile");
   pseudotile.set_tooltip_text("Pseudotiles a window");
   pseudotile.signal_toggled().connect(
-      []() { HandleWindowTypeUpdae(WindowType::pseudotile); });
+      []() { HandleWindowTypeUpdate(WindowType::pseudotile); });
   pseudotile.set_group(floating);
   winTypeBox.append(pseudotile);
   fullscreen.set_label("Fullscreen");
   fullscreen.set_tooltip_text("Fullscreens a window");
   fullscreen.signal_toggled().connect(
-      []() { HandleWindowTypeUpdae(WindowType::fullscreen); });
+      []() { HandleWindowTypeUpdate(WindowType::fullscreen); });
   winTypeBox.append(fullscreen);
   fullscreen.set_group(floating);
   maximize.set_label("Maximize");
   maximize.set_tooltip_text("Maximizes a window");
   maximize.signal_toggled().connect(
-      []() { HandleWindowTypeUpdae(WindowType::maximize); });
+      []() { HandleWindowTypeUpdate(WindowType::maximize); });
   maximize.set_group(floating);
   winTypeBox.append(maximize);
   noType.set_label("Default");
   noType.set_active(true);
   noType.signal_toggled().connect(
-      []() { HandleWindowTypeUpdae(WindowType::none); });
+      []() { HandleWindowTypeUpdate(WindowType::none); });
   noType.set_group(floating);
   winTypeBox.append(noType);
   editRuleBox.append(winTypeBox);
@@ -533,7 +546,8 @@ void MainWindow::InitRuleEditor() {
   Button *clearB = make_managed<Button>("Clear");
   clearB->signal_clicked().connect([this]() {
     ResetRuleEditor();
-    RuleConfig::InitRule(new Rule());
+    auto rule = new Rule();
+    RuleConfig::InitRule(*rule);
   });
   clearB->set_margin(5);
   clearB->set_hexpand(false);
@@ -570,6 +584,8 @@ void MainWindow::InitRuleEditor() {
 }
 
 void MainWindow::ResetRuleEditor() {
+  MainWindow::blockUpdateHandle = true;
+  nameEntry.set_text("");
   noType.set_active(true);
   for (auto i : dropDowns)
     i.second->set_selected(0);
@@ -583,29 +599,32 @@ void MainWindow::ResetRuleEditor() {
   activeOpacity.set_value(100);
   inactiveOpacity.set_value(100);
   fullscreenOpacity.set_value(100);
+  activeOpScale.set_value(100);
+  inactiveOpScale.set_value(100);
+  fullscreenOpScale.set_value(100);
   posXEntry.set_text("");
   posYEntry.set_text("");
   sizeXEntry.set_text("");
   sizeYEntry.set_text("");
+  MainWindow::blockUpdateHandle = false;
 }
 
-void MainWindow::LoadRule(std::string ruleString,
-                          std::vector<int> &ruleLineNum) {
-  Loader loader;
-  Rule *rule = new Rule();
-
-  loader.LoadFull(ruleString, rule);
+void MainWindow::LoadRule(Rule &rule) {
 
   RuleConfig::InitRule(rule);
-  RuleConfig::SetLines(ruleLineNum);
-  for (auto i : rule->props) {
+
+  MainWindow::blockUpdateHandle = true;
+  if (!rule.name.empty()) {
+    nameEntry.set_text(rule.name);
+  }
+  for (auto i : rule.props) {
     std::string prop = i.first;
     if (dropDowns.contains(prop))
       ParseDropDown(i.second, dropDowns[prop]);
     else if (regexEntrys.contains(prop))
       ParseRegExProps(i.second, regexEntrys[prop], regexDropDowns[prop]);
   }
-  for (auto i : rule->effects) {
+  for (auto i : rule.effects) {
     std::string prop = i.first;
     if (checkButtons.contains(prop))
       checkButtons[prop]->set_active(true);
@@ -614,16 +633,17 @@ void MainWindow::LoadRule(std::string ruleString,
     else if (prop == "pos")
       ParseTwoFields(i.second, &posXEntry, &posYEntry);
     else if (prop == "opacity")
-      ParseOpacity(i.second, &activeOpacity, &inactiveOpacity,
-                   &fullscreenOpacity);
+      ParseOpacity(i.second, &activeOpacity, &activeOpScale, &inactiveOpacity,
+                   &inactiveOpScale, &fullscreenOpacity, &fullscreenOpScale);
   }
+  MainWindow::blockUpdateHandle = false;
 }
 
 void MainWindow::DeleteRule(Gtk::ListBoxRow *row) {
   if (row) {
     Saver saver;
     auto ruleRow = dynamic_cast<RuleRow *>(row);
-    if (!saver.DeleteRule(ruleRow->ruleLineNum, configPath)) {
+    if (!saver.DeleteRule(ruleRow->rule.lineNum, configPath)) {
       FileErrorAlert();
       return;
     }
