@@ -1,8 +1,8 @@
 #include "include/loader.h"
-#include "include/regextype.h"
 #include "include/rule.h"
+#include <cstddef>
 #include <fstream>
-#include <iostream>
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -16,13 +16,13 @@ bool Loader::Load(std::string path, std::vector<Rule> &rules) {
   string input;
   int fileLine = 0;
   while (getline(file, input)) {
-    int type = isWindowRule(input);
+    int type = isWindowRule(input); //
     if (type == 0) {
       fileLine++;
       continue;
     } else if (type == 1) {
 
-      int pos = 0;
+      std::size_t pos = 0;
       string dat;
       Rule rule;
       while (input.length() > 0) {
@@ -33,6 +33,7 @@ bool Loader::Load(std::string path, std::vector<Rule> &rules) {
           dat = input;
           input.erase();
         }
+        dat = dat.substr(dat.find('=') + 1);
         stringstream ss(dat);
         string prop, args;
         ss >> prop;
@@ -43,15 +44,15 @@ bool Loader::Load(std::string path, std::vector<Rule> &rules) {
           prop = prop.substr(6);
         }
         getline(ss, args);
-        args.erase(0, 1);
+
         if (isMatch)
-          rule.props[prop] = args;
+          rule.props[prop] = Trim(args);
         else
-          rule.effects[prop] = args;
+          rule.effects[prop] = Trim(args);
       }
-      rules.push_back(rule);
       vector<int> vec{fileLine};
       rule.lineNum = vec;
+      rules.push_back(rule);
       fileLine++;
     } else if (type == 2) {
       vector<int> lineNum;
@@ -66,22 +67,21 @@ bool Loader::Load(std::string path, std::vector<Rule> &rules) {
           fileLine++;
           break;
         }
-        stringstream ss(input);   // отределай еще кнопки очищения где аргумент
-                                  // массив из полей которые очистить
-        std::string s, sec, last; // переименуй это
-        ss >> s >> sec;
+        stringstream ss(input); // отределай еще кнопки очищения где аргумент
+                                // массив из полей которые очистить
+        std::string first, sec, last; // переименуй это сделай trim еще
+        ss >> first >> sec;
         getline(ss, last);
-        if (sec == "=")
-          cout << "хорошо,у нас =\n";
-        if (s == "name") {
-          rule.name = last;
 
-        } else if (s.find("match:", 0) == 0) {
-          rule.props[s.substr(6)] = last;
-        } else {
-          rule.props[s] = last;
+        if (first == "name") {
+          rule.name = Trim(last);
+
+        } else if (first.find("match:", 0) == 0) {
+          rule.props[first.substr(6)] = Trim(last);
+        } else if (sec == "=") { // проверку что не пустое
+          rule.effects[first] = Trim(last);
         }
-        fileLine++;
+        fileLine++; // push в массив
       }
       rules.push_back(rule);
     }
@@ -91,24 +91,10 @@ bool Loader::Load(std::string path, std::vector<Rule> &rules) {
   return true;
 }
 
-RegexType Loader::GetRType(std::string &input) {
-  if (input.starts_with("^") && input.ends_with("$")) {
-    input = input.substr(1, input.length() - 2);
-    return RegexType::fullMatch;
-  } else if (input.starts_with(".*")) {
-    input = input.substr(2);
-
-    if (input.ends_with(".*")) {
-      input = input.substr(0, input.length() - 2);
-      return RegexType::contain;
-    } else
-      return RegexType::containLeft;
-  } else if (input.ends_with(".*")) {
-    input = input.substr(0, input.length() - 2);
-    return RegexType::containRight;
-  } else {
-    return RegexType::fullMatch;
-  }
+std::string Loader::Trim(std::string &input) {
+  auto first = input.find_first_not_of(" \t");
+  auto last = input.find_last_not_of(" \t");
+  return input.substr(first, last - first + 1);
 }
 
 int Loader::isWindowRule(const std::string &line) {
@@ -126,5 +112,6 @@ int Loader::isWindowRule(const std::string &line) {
       return 2;
     else
       return 0;
-  }
+  } else
+    return 0;
 }

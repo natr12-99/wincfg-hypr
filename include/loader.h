@@ -1,6 +1,5 @@
 #pragma once
 
-#include "include/regextype.h"
 #include "string"
 #include "vector"
 #include <vector>
@@ -11,6 +10,6 @@ public:
   bool Load(std::string path, std::vector<Rule> &rules);
 
 private:
-  RegexType GetRType(std::string &input);
   int isWindowRule(const std::string &line);
+  std::string Trim(std::string &input);
 };
