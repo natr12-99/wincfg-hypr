@@ -15,8 +15,7 @@ void HandleTwoFieldsUpdate(std::string keyword, Gtk::Entry *firstEntry,
 void HandleCheckButtonUpdate(std::string keyword, Gtk::CheckButton *cb);
 
 void HandleOpacityUpdate(Gtk::SpinButton *active, Gtk::SpinButton *inactive,
-                         Gtk::SpinButton *fullscreen, Gtk::Scale *scale,
-                         Gtk::SpinButton *current);
+                         Gtk::SpinButton *fullscreen);
 
 void HandleRegExProps(std::string keyword, Gtk::Entry *entry,
                       Gtk::DropDown *dropdown);

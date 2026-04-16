@@ -111,8 +111,7 @@ void HandleWindowTypeUpdate(WindowType type) {
 }
 
 void HandleOpacityUpdate(Gtk::SpinButton *activeSB, Gtk::SpinButton *inactiveSB,
-                         Gtk::SpinButton *fullscreenSB, Gtk::Scale *scale,
-                         Gtk::SpinButton *current) {
+                         Gtk::SpinButton *fullscreenSB) {
   if (MainWindow::blockUpdateHandle)
     return;
   float active = activeSB->get_value() / 100;
@@ -126,10 +125,6 @@ void HandleOpacityUpdate(Gtk::SpinButton *activeSB, Gtk::SpinButton *inactiveSB,
   else
     RuleConfig::SetEffectsString(
         "opacity", std::format("{} {} {}", active, inactive, fullscreen));
-
-  scale->freeze_notify();
-  scale->set_value(current->get_value_as_int());
-  scale->thaw_notify();
 }
 
 void HandleDropDown(std::string keyword, Gtk::DropDown *dropdown) {

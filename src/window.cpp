@@ -27,6 +27,7 @@
 #include "include/windowtype.h"
 #include "sigc++/functors/mem_fun.h"
 #include <format>
+#include <gtkmm/adjustment.h>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -247,7 +248,7 @@ void MainWindow::InitRuleEditor() {
   Box editRuleBox;
   Label nameTitleLabel;
   Box nameBox;
- nameEntry.set_hexpand(true);
+  nameEntry.set_hexpand(true);
   nameTitleLabel.set_markup("<b>Name</b>");
   nameEntry.set_placeholder_text(
       "If the field is empty it will be anonymous rule");
@@ -357,71 +358,55 @@ void MainWindow::InitRuleEditor() {
   activeOpBox.set_margin(4);
 
   Label actL("Active opacity%");
+  auto activeAdj = Adjustment::create(100, 0, 100);
   activeOpBox.append(actL);
   activeOpScale.set_hexpand(true);
-  activeOpScale.set_range(0, 100);
-  activeOpScale.set_increments(1, 10);
-  activeOpScale.set_value(100);
+  activeOpScale.set_adjustment(activeAdj);
+
   activeOpBox.append(activeOpScale);
-  activeOpacity.set_range(0, 100);
-  activeOpacity.set_increments(1, 10);
-  activeOpacity.set_value(100);
+  activeOpacity.set_adjustment(activeAdj);
+
   activeOpBox.append(activeOpacity);
 
   // прозрачность
   Box inactiveOpBox;
+  auto inactiveAdj = Adjustment::create(100, 0, 100);
   inactiveOpBox.set_margin(4);
   Label inacL("Inactive opacity%");
   inactiveOpBox.append(inacL);
   inactiveOpScale.set_hexpand(true);
-  inactiveOpScale.set_range(0, 100);
-  inactiveOpScale.set_increments(1, 10);
-  inactiveOpScale.set_value(100);
+  inactiveOpScale.set_adjustment(inactiveAdj);
   inactiveOpBox.append(inactiveOpScale);
-  inactiveOpacity.set_range(0, 100);
-  inactiveOpacity.set_increments(1, 10);
-  inactiveOpacity.set_value(100);
+  inactiveOpacity.set_adjustment(inactiveAdj);
   inactiveOpBox.append(inactiveOpacity);
   inactiveOpBox.set_margin(4);
 
   Box fullscreenOpBox;
+  auto fullscreenAdj = Adjustment::create(100, 0, 100);
   fullscreenOpBox.set_margin(4);
   Label fullL("Fullscreen opacity%");
   fullscreenOpBox.append(fullL);
   fullscreenOpScale.set_hexpand(true);
-  fullscreenOpScale.set_range(0, 100);
-  fullscreenOpScale.set_increments(1, 10);
-  fullscreenOpScale.set_value(100);
+  fullscreenOpScale.set_adjustment(fullscreenAdj);
   fullscreenOpBox.append(fullscreenOpScale);
-  fullscreenOpacity.set_range(0, 100);
-  fullscreenOpacity.set_increments(1, 10);
-  fullscreenOpacity.set_value(100);
+  fullscreenOpacity.set_adjustment(fullscreenAdj);
   fullscreenOpBox.append(fullscreenOpacity);
 
   editRuleBox.append(activeOpBox);
   editRuleBox.append(inactiveOpBox);
   editRuleBox.append(fullscreenOpBox);
 
-  activeOpacity.signal_value_changed().connect([this]() {
-    HandleOpacityUpdate(&activeOpacity, &inactiveOpacity, &fullscreenOpacity,
-                        &activeOpScale, &activeOpacity);
+  activeAdj->signal_value_changed().connect([this]() {
+    HandleOpacityUpdate(&activeOpacity, &inactiveOpacity, &fullscreenOpacity);
   });
-  activeOpScale.signal_value_changed().connect(
-      [this]() { activeOpacity.set_value(activeOpScale.get_value()); });
 
-  inactiveOpacity.signal_value_changed().connect([this]() {
-    HandleOpacityUpdate(&activeOpacity, &inactiveOpacity, &fullscreenOpacity,
-                        &inactiveOpScale, &inactiveOpacity);
+  inactiveAdj->signal_value_changed().connect([this]() {
+    HandleOpacityUpdate(&activeOpacity, &inactiveOpacity, &fullscreenOpacity);
   });
-  inactiveOpScale.signal_value_changed().connect(
-      [this]() { inactiveOpacity.set_value(inactiveOpScale.get_value()); });
 
-  fullscreenOpacity.signal_value_changed().connect([this]() {
-    HandleOpacityUpdate(&activeOpacity, &inactiveOpacity, &fullscreenOpacity,
-                        &fullscreenOpScale, &fullscreenOpacity);
+  fullscreenAdj->signal_value_changed().connect([this]() {
+    HandleOpacityUpdate(&activeOpacity, &inactiveOpacity, &fullscreenOpacity);
   });
-  fullscreenOpScale.signal_value_changed().connect(
-      [this]() { fullscreenOpacity.set_value(fullscreenOpScale.get_value()); });
 
   // тип
 
